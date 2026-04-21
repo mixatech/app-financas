@@ -1,7 +1,6 @@
 'use client'
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Transaction, getCategoryLabel, CATEGORY_COLORS } from '@/types'
 
 interface ExpenseChartProps {
@@ -26,51 +25,55 @@ export function ExpenseChart({ transactions }: ExpenseChartProps) {
 
   if (data.length === 0) {
     return (
-      <Card className="border-0 shadow-sm bg-white">
-        <CardHeader>
-          <CardTitle className="text-base font-semibold text-slate-700">Despesas por Categoria</CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center h-48 text-slate-400 text-sm">
+      <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        <h2 className="text-sm font-semibold text-gray-700 mb-1">Despesas por Categoria</h2>
+        <p className="text-xs text-gray-400 mb-6">Distribuição do período</p>
+        <div className="flex items-center justify-center h-48 text-gray-300 text-sm">
           Nenhuma despesa no período
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     )
   }
 
   return (
-    <Card className="border-0 shadow-sm bg-white">
-      <CardHeader>
-        <CardTitle className="text-base font-semibold text-slate-700">Despesas por Categoria</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={280}>
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="45%"
-              innerRadius={60}
-              outerRadius={100}
-              paddingAngle={3}
-              dataKey="value"
-            >
-              {data.map((entry, index) => (
-                <Cell key={index} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip
-              formatter={(value) =>
-                new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                  typeof value === 'number' ? value : 0
-                )
-              }
-            />
-            <Legend
-              formatter={(value) => <span className="text-xs text-slate-600">{value}</span>}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
+    <div className="bg-white rounded-2xl border border-gray-100 p-6">
+      <h2 className="text-sm font-semibold text-gray-700 mb-1">Despesas por Categoria</h2>
+      <p className="text-xs text-gray-400 mb-4">Distribuição do período</p>
+      <ResponsiveContainer width="100%" height={270}>
+        <PieChart>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="45%"
+            innerRadius={65}
+            outerRadius={100}
+            paddingAngle={3}
+            dataKey="value"
+          >
+            {data.map((entry, index) => (
+              <Cell key={index} fill={entry.color} stroke="none" />
+            ))}
+          </Pie>
+          <Tooltip
+            contentStyle={{
+              borderRadius: '12px',
+              border: 'none',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+              fontSize: '13px',
+            }}
+            formatter={(value) =>
+              new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                typeof value === 'number' ? value : 0
+              )
+            }
+          />
+          <Legend
+            iconType="circle"
+            iconSize={8}
+            formatter={(value) => <span style={{ fontSize: '12px', color: '#6b7280' }}>{value}</span>}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
   )
 }

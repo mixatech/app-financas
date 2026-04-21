@@ -9,9 +9,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!user) redirect('/auth/login')
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gray-50">
       <Navbar email={user.email ?? ''} />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-7xl mx-auto px-6 py-10">
         {children}
       </main>
     </div>

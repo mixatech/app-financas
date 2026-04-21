@@ -1,55 +1,69 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Transaction, getCategoryLabel } from '@/types'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 
 interface RecentTransactionsProps {
   transactions: Transaction[]
 }
 
-function formatCurrency(value: number) {
+function fmt(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 }
 
 export function RecentTransactions({ transactions }: RecentTransactionsProps) {
-  const recent = transactions.slice(0, 8)
+  const recent = transactions.slice(0, 7)
 
   return (
-    <Card className="border-0 shadow-sm bg-white">
-      <CardHeader>
-        <CardTitle className="text-base font-semibold text-slate-700">Transações Recentes</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {recent.length === 0 ? (
-          <p className="text-slate-400 text-sm text-center py-8">Nenhuma transação no período</p>
-        ) : (
-          <div className="space-y-3">
-            {recent.map((t) => (
-              <div key={t.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-700 truncate">{t.description}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <Badge variant="secondary" className="text-xs font-normal">
-                      {getCategoryLabel(t.category)}
-                    </Badge>
-                    <span className="text-xs text-slate-400">
-                      {format(new Date(t.date + 'T00:00:00'), 'dd MMM', { locale: ptBR })}
-                    </span>
-                  </div>
-                </div>
-                <span
-                  className={`text-sm font-semibold ml-4 shrink-0 ${
-                    t.type === 'income' ? 'text-green-600' : 'text-red-500'
+    <div className="bg-white rounded-2xl border border-gray-100 p-6">
+      <div className="flex items-center justify-between mb-1">
+        <h2 className="text-sm font-semibold text-gray-700">Transações Recentes</h2>
+        <Link
+          href="/transactions"
+          className="flex items-center gap-1 text-xs font-medium text-green-600 hover:text-green-700"
+        >
+          Ver todas <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+      <p className="text-xs text-gray-400 mb-5">Últimas movimentações</p>
+
+      {recent.length === 0 ? (
+        <div className="flex items-center justify-center h-40 text-gray-300 text-sm">
+          Nenhuma transação no período
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {recent.map((t) => (
+            <div
+              key={t.id}
+              className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className={`w-2 h-2 rounded-full shrink-0 ${
+                    t.type === 'income' ? 'bg-green-500' : 'bg-red-400'
                   }`}
-                >
-                  {t.type === 'income' ? '+' : '-'} {formatCurrency(t.amount)}
-                </span>
+                />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">{t.description}</p>
+                  <p className="text-xs text-gray-400">
+                    {getCategoryLabel(t.category)} ·{' '}
+                    {format(new Date(t.date + 'T00:00:00'), 'dd MMM', { locale: ptBR })}
+                  </p>
+                </div>
               </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              <span
+                className={`text-sm font-semibold ml-3 shrink-0 ${
+                  t.type === 'income' ? 'text-green-600' : 'text-gray-800'
+                }`}
+              >
+                {t.type === 'income' ? '+' : '−'} {fmt(t.amount)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

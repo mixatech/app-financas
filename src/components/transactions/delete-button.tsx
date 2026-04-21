@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,24 +32,28 @@ export function DeleteButton({ id }: { id: string }) {
     <AlertDialog>
       <AlertDialogTrigger
         render={
-          <Button variant="outline" size="sm" className="text-red-500 hover:text-red-700 hover:border-red-300">
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <button className="flex items-center gap-1.5 text-xs font-medium text-red-400 hover:text-red-600 border border-gray-200 hover:border-red-200 px-3 py-1.5 rounded-lg transition-colors">
+            <Trash2 className="h-3 w-3" />
+          </button>
         }
       />
-      <AlertDialogContent>
+      <AlertDialogContent className="rounded-2xl">
         <AlertDialogHeader>
-          <AlertDialogTitle>Excluir transação?</AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogTitle className="text-lg font-bold text-gray-900">
+            Excluir transação?
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-gray-500">
             Essa ação não pode ser desfeita. A transação será removida permanentemente.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel className="rounded-xl border-gray-200 text-gray-600">
+            Cancelar
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
             disabled={loading}
-            className="bg-red-600 hover:bg-red-700"
+            className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
           >
             {loading ? 'Excluindo...' : 'Excluir'}
           </AlertDialogAction>

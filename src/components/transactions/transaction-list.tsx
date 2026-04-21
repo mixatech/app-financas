@@ -1,5 +1,4 @@
 import { Transaction, getCategoryLabel } from '@/types'
-import { Badge } from '@/components/ui/badge'
 import { TransactionForm } from './transaction-form'
 import { DeleteButton } from './delete-button'
 import { format } from 'date-fns'
@@ -9,54 +8,58 @@ interface TransactionListProps {
   transactions: Transaction[]
 }
 
-function formatCurrency(value: number) {
+function fmt(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 }
 
 export function TransactionList({ transactions }: TransactionListProps) {
   if (transactions.length === 0) {
     return (
-      <div className="text-center py-16 text-slate-400">
-        <p className="text-lg font-medium">Nenhuma transação encontrada</p>
-        <p className="text-sm mt-1">Adicione sua primeira transação clicando em &quot;Nova transação&quot;</p>
+      <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
+        <p className="text-gray-800 font-semibold text-lg">Nenhuma transação encontrada</p>
+        <p className="text-gray-400 text-sm mt-1">
+          Ajuste os filtros ou adicione sua primeira transação
+        </p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-2">
-      {transactions.map((t) => (
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      {transactions.map((t, i) => (
         <div
           key={t.id}
-          className="flex items-center gap-4 bg-white rounded-xl px-4 py-3 shadow-sm border border-slate-100 hover:border-slate-200 transition-colors"
+          className={`flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors ${
+            i !== transactions.length - 1 ? 'border-b border-gray-50' : ''
+          }`}
         >
+          {/* Color indicator */}
           <div
-            className={`w-1 self-stretch rounded-full shrink-0 ${
-              t.type === 'income' ? 'bg-green-400' : 'bg-red-400'
+            className={`w-1 h-10 rounded-full shrink-0 ${
+              t.type === 'income' ? 'bg-green-500' : 'bg-red-400'
             }`}
           />
 
+          {/* Info */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-slate-700 truncate">{t.description}</p>
-            <div className="flex items-center gap-2 mt-0.5">
-              <Badge variant="secondary" className="text-xs font-normal shrink-0">
-                {getCategoryLabel(t.category)}
-              </Badge>
-              <span className="text-xs text-slate-400">
-                {format(new Date(t.date + 'T00:00:00'), 'dd/MM/yyyy', { locale: ptBR })}
-              </span>
-            </div>
+            <p className="text-sm font-semibold text-gray-800 truncate">{t.description}</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {getCategoryLabel(t.category)} ·{' '}
+              {format(new Date(t.date + 'T00:00:00'), "dd 'de' MMMM", { locale: ptBR })}
+            </p>
           </div>
 
+          {/* Amount */}
           <span
             className={`text-sm font-bold shrink-0 ${
-              t.type === 'income' ? 'text-green-600' : 'text-red-500'
+              t.type === 'income' ? 'text-green-600' : 'text-gray-800'
             }`}
           >
-            {t.type === 'income' ? '+' : '-'} {formatCurrency(t.amount)}
+            {t.type === 'income' ? '+' : '−'} {fmt(t.amount)}
           </span>
 
-          <div className="flex gap-1 shrink-0">
+          {/* Actions */}
+          <div className="flex gap-1.5 shrink-0">
             <TransactionForm transaction={t} />
             <DeleteButton id={t.id} />
           </div>
