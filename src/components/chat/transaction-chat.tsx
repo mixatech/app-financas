@@ -108,7 +108,7 @@ export function TransactionChat({ onClose }: TransactionChatProps) {
         {!parsed && (
           <div className="bg-purple-50 rounded-2xl p-4 text-sm text-gray-600">
             <p className="font-medium text-gray-800 mb-1">Descreva sua transação em linguagem natural</p>
-            <p className="text-gray-500 text-xs">Ex: <em>"Gastei 80 reais no mercado hoje"</em> ou <em>"Recebi meu salário de 3000"</em></p>
+            <p className="text-gray-500 text-xs">Ex: <em>&quot;Gastei 80 reais no mercado hoje&quot;</em> ou <em>&quot;Recebi meu salário de 3000&quot;</em></p>
           </div>
         )}
 
