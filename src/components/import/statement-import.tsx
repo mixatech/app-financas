@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Upload, FileText, X } from 'lucide-react'
+import { Upload, FileText } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -67,8 +67,6 @@ export function StatementImport({ cards, userId, familyId }: StatementImportProp
     setStep(2)
     setProcessing(false)
   }
-
-  const selectedCard = cards.find((c) => c.id === selectedCardId)
 
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetState() }}>
