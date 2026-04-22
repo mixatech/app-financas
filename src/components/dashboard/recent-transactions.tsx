@@ -21,7 +21,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
         <h2 className="text-sm font-semibold text-gray-700">Transações Recentes</h2>
         <Link
           href="/transactions"
-          className="flex items-center gap-1 text-xs font-medium text-green-600 hover:text-green-700"
+          className="flex items-center gap-1 text-xs font-medium text-[#2D8EFF] hover:text-blue-700"
         >
           Ver todas <ArrowRight className="h-3 w-3" />
         </Link>
@@ -42,7 +42,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
               <div className="flex items-center gap-3 min-w-0">
                 <div
                   className={`w-2 h-2 rounded-full shrink-0 ${
-                    t.type === 'income' ? 'bg-green-500' : 'bg-red-400'
+                    t.type === 'income' ? 'bg-[#7B2FBE]' : 'bg-red-400'
                   }`}
                 />
                 <div className="min-w-0">
@@ -55,7 +55,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
               </div>
               <span
                 className={`text-sm font-semibold ml-3 shrink-0 ${
-                  t.type === 'income' ? 'text-green-600' : 'text-gray-800'
+                  t.type === 'income' ? 'text-[#7B2FBE]' : 'text-gray-800'
                 }`}
               >
                 {t.type === 'income' ? '+' : '−'} {fmt(t.amount)}

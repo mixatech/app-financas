@@ -1,18 +1,28 @@
-import { Transaction, getCategoryLabel } from '@/types'
+import { Transaction, getCategoryLabel, FamilyMember, Card } from '@/types'
 import { TransactionForm } from './transaction-form'
 import { DeleteButton } from './delete-button'
+import { MemberAvatar } from '@/components/family/member-avatar'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { CreditCard } from 'lucide-react'
 
 interface TransactionListProps {
   transactions: Transaction[]
+  familyMembers?: FamilyMember[]
+  cards?: Card[]
+  currentUserMemberId?: string
 }
 
 function fmt(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 }
 
-export function TransactionList({ transactions }: TransactionListProps) {
+export function TransactionList({
+  transactions,
+  familyMembers = [],
+  cards = [],
+  currentUserMemberId,
+}: TransactionListProps) {
   if (transactions.length === 0) {
     return (
       <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
@@ -24,47 +34,71 @@ export function TransactionList({ transactions }: TransactionListProps) {
     )
   }
 
+  const memberMap = Object.fromEntries(familyMembers.map((m) => [m.id, m]))
+  const cardMap = Object.fromEntries(cards.map((c) => [c.id, c]))
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-      {transactions.map((t, i) => (
-        <div
-          key={t.id}
-          className={`flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors ${
-            i !== transactions.length - 1 ? 'border-b border-gray-50' : ''
-          }`}
-        >
-          {/* Color indicator */}
+      {transactions.map((t, i) => {
+        const paidByMember = t.paid_by_member_id ? memberMap[t.paid_by_member_id] : null
+        const card = t.card_id ? cardMap[t.card_id] : null
+
+        return (
           <div
-            className={`w-1 h-10 rounded-full shrink-0 ${
-              t.type === 'income' ? 'bg-green-500' : 'bg-red-400'
-            }`}
-          />
-
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-800 truncate">{t.description}</p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {getCategoryLabel(t.category)} ·{' '}
-              {format(new Date(t.date + 'T00:00:00'), "dd 'de' MMMM", { locale: ptBR })}
-            </p>
-          </div>
-
-          {/* Amount */}
-          <span
-            className={`text-sm font-bold shrink-0 ${
-              t.type === 'income' ? 'text-green-600' : 'text-gray-800'
+            key={t.id}
+            className={`flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors ${
+              i !== transactions.length - 1 ? 'border-b border-gray-50' : ''
             }`}
           >
-            {t.type === 'income' ? '+' : '−'} {fmt(t.amount)}
-          </span>
+            {/* Color indicator */}
+            <div
+              className="w-1 h-10 rounded-full shrink-0"
+              style={{ background: t.type === 'income' ? 'var(--brand-gradient)' : '#f87171' }}
+            />
 
-          {/* Actions */}
-          <div className="flex gap-1.5 shrink-0">
-            <TransactionForm transaction={t} />
-            <DeleteButton id={t.id} />
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-800 truncate">{t.description}</p>
+              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                <span className="text-xs text-gray-400">
+                  {getCategoryLabel(t.category)} ·{' '}
+                  {format(new Date(t.date + 'T00:00:00'), "dd 'de' MMMM", { locale: ptBR })}
+                </span>
+                {card && (
+                  <span className="inline-flex items-center gap-1 text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-md">
+                    <CreditCard className="h-3 w-3" />
+                    {card.name}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Member avatar */}
+            {paidByMember && (
+              <MemberAvatar name={paidByMember.display_name} color={paidByMember.color} size="sm" />
+            )}
+
+            {/* Amount */}
+            <span
+              className="text-sm font-bold shrink-0"
+              style={{ color: t.type === 'income' ? '#7B2FBE' : '#111827' }}
+            >
+              {t.type === 'income' ? '+' : '−'} {fmt(t.amount)}
+            </span>
+
+            {/* Actions */}
+            <div className="flex gap-1.5 shrink-0">
+              <TransactionForm
+                transaction={t}
+                familyMembers={familyMembers}
+                cards={cards}
+                currentUserMemberId={currentUserMemberId}
+              />
+              <DeleteButton id={t.id} />
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

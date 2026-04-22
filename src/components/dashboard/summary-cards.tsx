@@ -15,11 +15,11 @@ export function SummaryCards({ totalIncome, totalExpense }: SummaryCardsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
       {/* Receitas */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-green-200 transition-colors">
+      <div className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-purple-200 transition-colors">
         <div className="flex items-center justify-between mb-4">
           <span className="text-sm font-medium text-gray-500">Receitas</span>
-          <div className="bg-green-50 p-2 rounded-xl">
-            <TrendingUp className="h-4 w-4 text-green-600" />
+          <div className="bg-purple-50 p-2 rounded-xl">
+            <TrendingUp className="h-4 w-4 text-[#7B2FBE]" />
           </div>
         </div>
         <p className="text-2xl font-bold text-gray-900">{fmt(totalIncome)}</p>
@@ -39,11 +39,10 @@ export function SummaryCards({ totalIncome, totalExpense }: SummaryCardsProps) {
       </div>
 
       {/* Saldo */}
-      <div className={`rounded-2xl p-6 border transition-colors ${
-        balance >= 0
-          ? 'bg-green-600 border-green-600'
-          : 'bg-red-500 border-red-500'
-      }`}>
+      <div
+        className="rounded-2xl p-6 border-0"
+        style={{ background: balance >= 0 ? 'var(--brand-gradient)' : '#ef4444' }}
+      >
         <div className="flex items-center justify-between mb-4">
           <span className="text-sm font-medium text-white/80">Saldo</span>
           <div className="bg-white/20 p-2 rounded-xl">

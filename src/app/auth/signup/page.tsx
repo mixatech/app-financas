@@ -45,8 +45,8 @@ export default function SignupPage() {
       <div className="min-h-screen bg-white flex items-center justify-center p-8">
         <div className="w-full max-w-md text-center space-y-6">
           <div className="flex justify-center">
-            <div className="bg-green-100 p-4 rounded-full">
-              <Mail className="h-10 w-10 text-green-600" />
+            <div className="p-4 rounded-full" style={{ background: '#f3e8ff' }}>
+              <Mail className="h-10 w-10" style={{ color: '#7B2FBE' }} />
             </div>
           </div>
           <div className="space-y-2">
@@ -59,23 +59,21 @@ export default function SignupPage() {
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-left space-y-3">
             <p className="text-sm font-semibold text-amber-800">Não encontrou o e-mail?</p>
             <ul className="space-y-2 text-sm text-amber-700">
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-amber-500" />
-                Verifique sua <strong>caixa de entrada</strong>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-amber-500" />
-                Confira a pasta de <strong>spam / lixo eletrônico</strong>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-amber-500" />
-                O e-mail pode levar alguns minutos para chegar
-              </li>
+              {[
+                'Verifique sua caixa de entrada',
+                'Confira a pasta de spam / lixo eletrônico',
+                'O e-mail pode levar alguns minutos para chegar',
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-amber-500" />
+                  {item}
+                </li>
+              ))}
             </ul>
           </div>
           <p className="text-sm text-gray-400">
             Já confirmou?{' '}
-            <Link href="/auth/login" className="text-green-600 hover:text-green-700 font-semibold">
+            <Link href="/auth/login" className="font-semibold" style={{ color: '#7B2FBE' }}>
               Fazer login
             </Link>
           </p>
@@ -86,44 +84,43 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-white flex">
-      {/* Left panel — branding */}
-      <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 bg-gray-950 p-12">
+      {/* Left panel */}
+      <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-12" style={{ background: '#0D0D0D' }}>
         <div className="flex items-center gap-2.5">
-          <div className="bg-green-500 text-white p-2 rounded-xl">
+          <div className="text-white p-2 rounded-xl" style={{ background: 'var(--brand-gradient)' }}>
             <TrendingUp className="h-5 w-5" />
           </div>
-          <span className="text-white font-bold text-xl tracking-tight">FinançasPRO</span>
+          <span className="text-white font-bold text-xl tracking-tight">FamilyFinance</span>
         </div>
         <div className="space-y-4">
           <p className="text-white text-3xl font-bold leading-snug">
-            Comece a organizar sua vida financeira hoje.
+            Organize as finanças da sua família de forma inteligente.
           </p>
           <ul className="space-y-3 text-gray-400 text-sm">
             {[
-              'Registre receitas e despesas em segundos',
-              'Visualize gráficos e resumos mensais',
-              'Filtre por categoria e período',
-              '100% seguro — seus dados são só seus',
+              'Grupos familiares com login individual',
+              'Chat IA: registre gastos em linguagem natural',
+              'Importe extratos PDF e CSV automaticamente',
+              'Dashboard consolidado por membro',
             ].map((item) => (
               <li key={item} className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: '#7B2FBE' }} />
                 {item}
               </li>
             ))}
           </ul>
         </div>
-        <p className="text-gray-600 text-sm">© 2025 FinançasPRO. Todos os direitos reservados.</p>
+        <p className="text-gray-600 text-sm">© 2025 FamilyFinance · Mixa. Todos os direitos reservados.</p>
       </div>
 
-      {/* Right panel — form */}
+      {/* Right panel */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-10 lg:hidden">
-            <div className="bg-green-600 text-white p-1.5 rounded-lg">
+            <div className="text-white p-1.5 rounded-lg" style={{ background: 'var(--brand-gradient)' }}>
               <TrendingUp className="h-4 w-4" />
             </div>
-            <span className="font-bold text-gray-900 text-lg">FinançasPRO</span>
+            <span className="font-bold text-gray-900 text-lg">FamilyFinance</span>
           </div>
 
           <h1 className="text-3xl font-bold text-gray-900 mb-1">Criar conta</h1>
@@ -143,7 +140,7 @@ export default function SignupPage() {
                 placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-11 border-gray-200 focus:border-green-500 focus:ring-green-500 rounded-xl"
+                className="h-11 border-gray-200 rounded-xl"
                 required
               />
             </div>
@@ -155,14 +152,15 @@ export default function SignupPage() {
                 placeholder="Mínimo 6 caracteres"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-11 border-gray-200 focus:border-green-500 focus:ring-green-500 rounded-xl"
+                className="h-11 border-gray-200 rounded-xl"
                 required
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-11 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-60"
+              className="w-full h-11 text-white font-semibold rounded-xl transition-opacity disabled:opacity-60"
+              style={{ background: 'var(--brand-gradient)' }}
             >
               {loading ? 'Criando conta...' : 'Criar conta grátis'}
             </button>
@@ -175,7 +173,7 @@ export default function SignupPage() {
 
           <p className="text-sm text-gray-400 text-center mt-6">
             Já tem conta?{' '}
-            <Link href="/auth/login" className="text-green-600 hover:text-green-700 font-semibold">
+            <Link href="/auth/login" className="font-semibold" style={{ color: '#7B2FBE' }}>
               Fazer login
             </Link>
           </p>

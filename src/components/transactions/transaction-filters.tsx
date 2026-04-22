@@ -37,7 +37,7 @@ export function TransactionFilters() {
         type="month"
         defaultValue={searchParams.get('month') ?? ''}
         onChange={(e) => updateParam('month', e.target.value)}
-        className="border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent h-9"
+        className="border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-[#7B2FBE] focus:border-transparent h-9"
       />
 
       <Select

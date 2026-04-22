@@ -44,33 +44,39 @@
 }
 
 :root {
+  /* Identidade Mixa */
+  --brand-primary: #7B2FBE;
+  --brand-primary-hover: #6A25A8;
+  --brand-secondary: #2D8EFF;
+  --brand-gradient: linear-gradient(135deg, #7B2FBE 0%, #2D8EFF 100%);
+
   --background: #ffffff;
   --foreground: #111827;
   --card: #ffffff;
   --card-foreground: #111827;
   --popover: #ffffff;
   --popover-foreground: #111827;
-  --primary: #16a34a;
+  --primary: #7B2FBE;
   --primary-foreground: #ffffff;
-  --secondary: #f0fdf4;
-  --secondary-foreground: #15803d;
+  --secondary: #f3e8ff;
+  --secondary-foreground: #6d28d9;
   --muted: #f9fafb;
   --muted-foreground: #6b7280;
-  --accent: #f0fdf4;
-  --accent-foreground: #15803d;
+  --accent: #eff6ff;
+  --accent-foreground: #2D8EFF;
   --destructive: #ef4444;
   --border: #e5e7eb;
   --input: #e5e7eb;
-  --ring: #16a34a;
+  --ring: #7B2FBE;
   --radius: 0.75rem;
   --sidebar: #ffffff;
   --sidebar-foreground: #111827;
-  --sidebar-primary: #16a34a;
+  --sidebar-primary: #7B2FBE;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f0fdf4;
-  --sidebar-accent-foreground: #15803d;
+  --sidebar-accent: #f3e8ff;
+  --sidebar-accent-foreground: #6d28d9;
   --sidebar-border: #e5e7eb;
-  --sidebar-ring: #16a34a;
+  --sidebar-ring: #7B2FBE;
 }
 
 @layer base {

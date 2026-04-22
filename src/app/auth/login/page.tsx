@@ -37,34 +37,33 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-white flex">
-      {/* Left panel — branding */}
-      <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 bg-gray-950 p-12">
+      {/* Left panel */}
+      <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-12" style={{ background: '#0D0D0D' }}>
         <div className="flex items-center gap-2.5">
-          <div className="bg-green-500 text-white p-2 rounded-xl">
+          <div className="text-white p-2 rounded-xl" style={{ background: 'var(--brand-gradient)' }}>
             <TrendingUp className="h-5 w-5" />
           </div>
-          <span className="text-white font-bold text-xl tracking-tight">FinançasPRO</span>
+          <span className="text-white font-bold text-xl tracking-tight">FamilyFinance</span>
         </div>
         <div className="space-y-4">
           <p className="text-white text-3xl font-bold leading-snug">
-            Controle suas finanças com clareza e inteligência.
+            Controle financeiro inteligente para toda a família.
           </p>
           <p className="text-gray-400 text-base leading-relaxed">
-            Registre receitas e despesas, acompanhe seu saldo em tempo real e tome decisões financeiras melhores.
+            Gerencie receitas, despesas e o orçamento da família em um só lugar — com IA que entende sua linguagem.
           </p>
         </div>
-        <p className="text-gray-600 text-sm">© 2025 FinançasPRO. Todos os direitos reservados.</p>
+        <p className="text-gray-600 text-sm">© 2025 FamilyFinance · Mixa. Todos os direitos reservados.</p>
       </div>
 
-      {/* Right panel — form */}
+      {/* Right panel */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-10 lg:hidden">
-            <div className="bg-green-600 text-white p-1.5 rounded-lg">
+            <div className="text-white p-1.5 rounded-lg" style={{ background: 'var(--brand-gradient)' }}>
               <TrendingUp className="h-4 w-4" />
             </div>
-            <span className="font-bold text-gray-900 text-lg">FinançasPRO</span>
+            <span className="font-bold text-gray-900 text-lg">FamilyFinance</span>
           </div>
 
           <h1 className="text-3xl font-bold text-gray-900 mb-1">Entrar</h1>
@@ -84,7 +83,7 @@ export default function LoginPage() {
                 placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-11 border-gray-200 focus:border-green-500 focus:ring-green-500 rounded-xl"
+                className="h-11 border-gray-200 rounded-xl"
                 required
               />
             </div>
@@ -96,14 +95,15 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-11 border-gray-200 focus:border-green-500 focus:ring-green-500 rounded-xl"
+                className="h-11 border-gray-200 rounded-xl"
                 required
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-11 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-60"
+              className="w-full h-11 text-white font-semibold rounded-xl transition-opacity disabled:opacity-60"
+              style={{ background: 'var(--brand-gradient)' }}
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
@@ -111,7 +111,7 @@ export default function LoginPage() {
 
           <p className="text-sm text-gray-400 text-center mt-6">
             Não tem conta?{' '}
-            <Link href="/auth/signup" className="text-green-600 hover:text-green-700 font-semibold">
+            <Link href="/auth/signup" className="font-semibold" style={{ color: '#7B2FBE' }}>
               Criar conta grátis
             </Link>
           </p>

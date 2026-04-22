@@ -3,7 +3,9 @@ import { createClient } from '@/lib/supabase/server'
 import { TransactionList } from '@/components/transactions/transaction-list'
 import { TransactionFilters } from '@/components/transactions/transaction-filters'
 import { TransactionForm } from '@/components/transactions/transaction-form'
-import { Transaction } from '@/types'
+import { StatementImport } from '@/components/import/statement-import'
+import { ChatFab } from '@/components/chat/chat-fab'
+import { Transaction, Card, FamilyMember } from '@/types'
 import { format } from 'date-fns'
 
 function fmt(value: number) {
@@ -25,19 +27,43 @@ export default async function TransactionsPage({
   const startDate = `${year}-${monthNum}-01`
   const endDate = new Date(parseInt(year), parseInt(monthNum), 0).toISOString().split('T')[0]
 
-  let query = supabase
-    .from('transactions')
-    .select('*')
+  // Buscar membro do usuário (para cartões e família)
+  const { data: myMember } = await supabase
+    .from('family_members')
+    .select('id, family_id')
     .eq('user_id', user!.id)
-    .gte('date', startDate)
-    .lte('date', endDate)
-    .order('date', { ascending: false })
+    .maybeSingle()
 
-  if (params.type && params.type !== 'all') query = query.eq('type', params.type)
-  if (params.category && params.category !== 'all') query = query.eq('category', params.category)
+  const familyId = myMember?.family_id ?? null
+  const currentUserMemberId = myMember?.id ?? undefined
 
-  const { data } = await query
-  const transactions: Transaction[] = data ?? []
+  // Buscar transações, cartões e membros em paralelo
+  const [transactionsResult, cardsResult, membersResult] = await Promise.all([
+    (async () => {
+      let query = supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', user!.id)
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('date', { ascending: false })
+
+      if (params.type && params.type !== 'all') query = query.eq('type', params.type)
+      if (params.category && params.category !== 'all') query = query.eq('category', params.category)
+
+      return query
+    })(),
+    familyId
+      ? supabase.from('cards').select('*').eq('family_id', familyId)
+      : Promise.resolve({ data: [] }),
+    familyId
+      ? supabase.from('family_members').select('*').eq('family_id', familyId)
+      : Promise.resolve({ data: [] }),
+  ])
+
+  const transactions: Transaction[] = transactionsResult.data ?? []
+  const cards: Card[] = (cardsResult.data ?? []) as Card[]
+  const familyMembers: FamilyMember[] = (membersResult.data ?? []) as FamilyMember[]
 
   const totalIncome = transactions.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
   const totalExpense = transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
@@ -45,45 +71,58 @@ export default async function TransactionsPage({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold text-green-600 uppercase tracking-widest mb-1">Histórico</p>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#7B2FBE' }}>
+            Histórico
+          </p>
           <h1 className="text-3xl font-bold text-gray-900">Transações</h1>
           <p className="text-gray-400 text-sm mt-1">
             {transactions.length} transaç{transactions.length !== 1 ? 'ões' : 'ão'} encontrada{transactions.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <TransactionForm />
+        <div className="flex items-center gap-2 flex-wrap">
+          <StatementImport cards={cards} userId={user!.id} familyId={familyId} />
+          <TransactionForm
+            familyMembers={familyMembers}
+            cards={cards}
+            currentUserMemberId={currentUserMemberId}
+          />
+        </div>
       </div>
 
-      {/* Filters */}
       <div className="bg-white rounded-2xl border border-gray-100 px-6 py-4">
         <Suspense>
           <TransactionFilters />
         </Suspense>
       </div>
 
-      {/* Summary strip */}
       {transactions.length > 0 && (
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-white rounded-xl border border-gray-100 px-5 py-3 flex flex-col">
             <span className="text-xs text-gray-400 mb-1">Receitas</span>
-            <span className="text-base font-bold text-green-600">{fmt(totalIncome)}</span>
+            <span className="text-base font-bold" style={{ color: '#7B2FBE' }}>{fmt(totalIncome)}</span>
           </div>
           <div className="bg-white rounded-xl border border-gray-100 px-5 py-3 flex flex-col">
             <span className="text-xs text-gray-400 mb-1">Despesas</span>
             <span className="text-base font-bold text-gray-800">{fmt(totalExpense)}</span>
           </div>
-          <div className={`rounded-xl border px-5 py-3 flex flex-col ${balance >= 0 ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
+          <div className={`rounded-xl border px-5 py-3 flex flex-col ${balance >= 0 ? 'bg-purple-50 border-purple-100' : 'bg-red-50 border-red-100'}`}>
             <span className="text-xs text-gray-400 mb-1">Saldo</span>
-            <span className={`text-base font-bold ${balance >= 0 ? 'text-green-600' : 'text-red-500'}`}>{fmt(balance)}</span>
+            <span className="text-base font-bold" style={{ color: balance >= 0 ? '#7B2FBE' : '#ef4444' }}>
+              {fmt(balance)}
+            </span>
           </div>
         </div>
       )}
 
-      {/* List */}
-      <TransactionList transactions={transactions} />
+      <TransactionList
+        transactions={transactions}
+        familyMembers={familyMembers}
+        cards={cards}
+        currentUserMemberId={currentUserMemberId}
+      />
+      <ChatFab />
     </div>
   )
 }
