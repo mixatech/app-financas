@@ -2,11 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { TrendingUp, Users, Link2, User } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { MEMBER_COLORS } from '@/types'
+import { createFamilyGroup } from './actions'
 
 interface OnboardingFlowProps {
   userId: string
@@ -15,7 +14,7 @@ interface OnboardingFlowProps {
 
 type Step = 'choose' | 'create' | 'join'
 
-export function OnboardingFlow({ userId, userEmail }: OnboardingFlowProps) {
+export function OnboardingFlow({ userEmail }: OnboardingFlowProps) {
   const [step, setStep] = useState<Step>('choose')
   const [groupName, setGroupName] = useState('')
   const [displayName, setDisplayName] = useState(userEmail.split('@')[0])
@@ -23,37 +22,17 @@ export function OnboardingFlow({ userId, userEmail }: OnboardingFlowProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
   async function handleCreateGroup() {
     if (!groupName.trim() || !displayName.trim()) return
     setLoading(true)
     setError('')
 
-    // 1. Criar grupo
-    const { data: group, error: groupErr } = await supabase
-      .from('family_groups')
-      .insert({ name: groupName.trim(), created_by: userId })
-      .select()
-      .single()
+    const result = await createFamilyGroup(groupName, displayName)
 
-    if (groupErr || !group) {
-      setError('Erro ao criar grupo. Tente novamente.')
-      setLoading(false)
-      return
-    }
-
-    // 2. Adicionar usuário como admin
-    const { error: memberErr } = await supabase.from('family_members').insert({
-      family_id: group.id,
-      user_id: userId,
-      display_name: displayName.trim(),
-      role: 'admin',
-      color: MEMBER_COLORS[0],
-    })
-
-    if (memberErr) {
-      setError('Erro ao configurar membro. Tente novamente.')
+    if (result.error) {
+      console.error('[Onboarding] Erro ao criar grupo:', result.error)
+      setError(result.error)
       setLoading(false)
       return
     }

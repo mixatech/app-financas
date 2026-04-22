@@ -78,10 +78,6 @@ Exemplo: [{"date":"2025-01-15","description":"Supermercado","amount":120.50,"typ
         type: 'income' | 'expense'
       }>
 
-      // Adicionar categoria sugerida
-      const { parseCSV: _, ...parserModule } = await import('@/lib/parsers/csv-parser')
-      void parserModule
-
       const transactions = rawTransactions.map((t) => ({
         ...t,
         category: t.type === 'income' ? 'other_income' : 'other_expense',
