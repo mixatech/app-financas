@@ -6,7 +6,14 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }))
 
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: vi.fn(),
+}))
+
+import { createAdminClient } from '@/lib/supabase/admin'
+
 const mockCreateClient = vi.mocked(createClient)
+const mockCreateAdminClient = vi.mocked(createAdminClient)
 
 describe('createFamilyGroup', () => {
   beforeEach(() => {
@@ -36,6 +43,9 @@ describe('createFamilyGroup', () => {
       auth: {
         getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }),
       },
+    } as never)
+
+    mockCreateAdminClient.mockReturnValue({
       from: vi.fn()
         .mockReturnValueOnce({ insert: mockInsertGroup })
         .mockReturnValueOnce({ insert: mockInsertMember }),
@@ -59,6 +69,9 @@ describe('createFamilyGroup', () => {
       auth: {
         getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }),
       },
+    } as never)
+
+    mockCreateAdminClient.mockReturnValue({
       from: vi.fn().mockReturnValue({ insert: mockInsertGroup }),
     } as never)
 
@@ -77,6 +90,9 @@ describe('createFamilyGroup', () => {
       auth: {
         getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }),
       },
+    } as never)
+
+    mockCreateAdminClient.mockReturnValue({
       from: vi.fn()
         .mockReturnValueOnce({ insert: mockInsertGroup })
         .mockReturnValueOnce({ insert: mockInsertMember }),
