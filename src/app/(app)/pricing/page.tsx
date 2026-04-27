@@ -27,7 +27,7 @@ const plans = [
     description: 'Para controle financeiro completo',
     features: [
       'Transações ilimitadas',
-      'IA financeira (50 consultas/mês)',
+      'IA financeira (30 chats IA/mês)',
       'Importação de extratos PDF',
       'Relatórios avançados',
       'Categorias personalizadas',

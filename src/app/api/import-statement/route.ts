@@ -85,8 +85,7 @@ Exemplo: [{"date":"2026-01-15","description":"Supermercado","amount":120.50,"typ
 
     return NextResponse.json({ error: 'Tipo de arquivo não suportado' }, { status: 400 })
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    console.error('import-statement error:', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('import-statement error:', err)
+    return NextResponse.json({ error: 'Erro ao processar o arquivo.' }, { status: 500 })
   }
 }

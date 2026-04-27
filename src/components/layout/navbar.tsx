@@ -63,6 +63,7 @@ export function Navbar({ email, planBadge }: { email: string; planBadge?: React.
           {/* Right side */}
           <div className="hidden md:flex items-center gap-3">
             <span className="text-sm text-gray-400 truncate max-w-[200px]">{email}</span>
+            {planBadge}
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 px-3 py-2 rounded-full hover:bg-gray-50 transition-colors"

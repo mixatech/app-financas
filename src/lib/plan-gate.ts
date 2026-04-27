@@ -19,7 +19,8 @@ export async function checkAiFeature(
     .eq('user_id', userId)
     .single()
 
-  const plan: Plan = (sub?.plan ?? 'free') as Plan
+  const isActive = sub?.status === 'active' || sub?.status === 'trialing'
+  const plan: Plan = (isActive ? (sub?.plan as Plan) : undefined) ?? 'free'
   const limits = PLAN_LIMITS[plan]
 
   const limit = feature === 'ai_chat' ? limits.ai_chats : limits.pdf_imports

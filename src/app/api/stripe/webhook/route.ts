@@ -6,7 +6,8 @@ import type Stripe from 'stripe'
 
 export async function POST(req: NextRequest) {
   const body = await req.text()
-  const sig = req.headers.get('stripe-signature')!
+  const sig = req.headers.get('stripe-signature')
+  if (!sig) return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
 
   let event: Stripe.Event
   try {

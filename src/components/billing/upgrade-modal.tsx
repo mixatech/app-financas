@@ -80,7 +80,7 @@ export function UpgradeModal({ open, onClose, reason, feature }: UpgradeModalPro
           />
           <CheckoutButton
             plan="family"
-            label="Upgrade para Família — R$29/mês"
+            label="Upgrade para Família — R$39,90/mês"
             className="w-full h-10 rounded-xl border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-60"
           />
         </div>
