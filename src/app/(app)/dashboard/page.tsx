@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
-import { SummaryCards } from '@/components/dashboard/summary-cards'
+import { createAdminClient } from '@/lib/supabase/admin'
+// SummaryCards replaced by inline Fintech Bold header
 import { ExpenseChart } from '@/components/dashboard/expense-chart'
 import { RecentTransactions } from '@/components/dashboard/recent-transactions'
 import { MemberBreakdown } from '@/components/dashboard/member-breakdown'
@@ -20,6 +21,7 @@ export default async function DashboardPage({
   const params = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const db = createAdminClient()
 
   const now = new Date()
   const month = params.month ?? format(now, 'yyyy-MM')
@@ -30,7 +32,7 @@ export default async function DashboardPage({
   const view = params.view ?? 'personal'
 
   // Buscar membro do usuário
-  const { data: myMember } = await supabase
+  const { data: myMember } = await db
     .from('family_members')
     .select('id, family_id')
     .eq('user_id', user!.id)
@@ -41,7 +43,7 @@ export default async function DashboardPage({
 
   // Buscar dados em paralelo
   const [txResult, membersResult, cardsResult, familyTxResult] = await Promise.all([
-    supabase
+    db
       .from('transactions')
       .select('*')
       .eq('user_id', user!.id)
@@ -49,13 +51,13 @@ export default async function DashboardPage({
       .lte('date', endDate)
       .order('date', { ascending: false }),
     familyId
-      ? supabase.from('family_members').select('*').eq('family_id', familyId)
+      ? db.from('family_members').select('*').eq('family_id', familyId)
       : Promise.resolve({ data: [] }),
     familyId
-      ? supabase.from('cards').select('*').eq('family_id', familyId)
+      ? db.from('cards').select('*').eq('family_id', familyId)
       : Promise.resolve({ data: [] }),
     familyId && view === 'family'
-      ? supabase
+      ? db
           .from('transactions')
           .select('*')
           .eq('family_id', familyId)
@@ -74,6 +76,11 @@ export default async function DashboardPage({
 
   const totalIncome = transactions.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
   const totalExpense = transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+  const balance = totalIncome - totalExpense
+
+  function fmt(value: number) {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
+  }
 
   const hasFamily = familyMembers.length > 0
 
@@ -106,7 +113,32 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      <SummaryCards totalIncome={totalIncome} totalExpense={totalExpense} />
+      {/* Fintech Bold header */}
+      <div
+        className="rounded-2xl p-6 mb-6"
+        style={{ background: 'linear-gradient(135deg, #18181b, #3b0764)' }}
+      >
+        <p className="text-xs font-medium text-zinc-400 mb-4">
+          Resumo do mês
+        </p>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="rounded-xl bg-white/10 border border-white/10 p-4">
+            <div className="text-xs text-violet-300 mb-1">Receitas</div>
+            <div className="text-xl font-bold text-white">{fmt(totalIncome)}</div>
+          </div>
+          <div className="rounded-xl bg-white/10 border border-white/10 p-4">
+            <div className="text-xs text-pink-300 mb-1">Despesas</div>
+            <div className="text-xl font-bold text-white">{fmt(totalExpense)}</div>
+          </div>
+          <div
+            className="rounded-xl border p-4"
+            style={{ background: 'rgba(16,185,129,0.2)', borderColor: 'rgba(16,185,129,0.3)' }}
+          >
+            <div className="text-xs text-emerald-300 mb-1">Saldo</div>
+            <div className="text-xl font-bold text-emerald-300">{fmt(balance)}</div>
+          </div>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <ExpenseChart transactions={transactions} />
