@@ -38,7 +38,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-white flex">
       {/* Left panel */}
-      <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-12" style={{ background: '#0D0D0D' }}>
+      <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-12" style={{ background: 'linear-gradient(135deg, #18181b 0%, #3b0764 100%)' }}>
         <div className="flex items-center gap-2.5">
           <div className="text-white p-2 rounded-xl" style={{ background: 'var(--brand-gradient)' }}>
             <TrendingUp className="h-5 w-5" />
