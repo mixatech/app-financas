@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { parseCSV } from '@/lib/parsers/csv-parser'
 import Anthropic from '@anthropic-ai/sdk'
-
-const anthropic = new Anthropic()
+import { checkAiFeature } from '@/lib/plan-gate'
 
 export const maxDuration = 60
 
@@ -28,12 +27,16 @@ export async function POST(req: NextRequest) {
     }
 
     if (fileType === 'pdf') {
-      // Converter PDF para base64 e enviar para Claude Vision
+      const gate = await checkAiFeature(user.id, 'pdf_import')
+      if (!gate.allowed) {
+        return NextResponse.json({ error: gate.reason }, { status: 402 })
+      }
+
       const buffer = await file.arrayBuffer()
       const base64 = Buffer.from(buffer).toString('base64')
-
       const today = new Date().toISOString().split('T')[0]
 
+      const anthropic = new Anthropic()
       const message = await anthropic.messages.create({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 4096,
@@ -43,11 +46,7 @@ export async function POST(req: NextRequest) {
             content: [
               {
                 type: 'document',
-                source: {
-                  type: 'base64',
-                  media_type: 'application/pdf',
-                  data: base64,
-                },
+                source: { type: 'base64', media_type: 'application/pdf', data: base64 },
               } as never,
               {
                 type: 'text',
@@ -55,9 +54,11 @@ export async function POST(req: NextRequest) {
 
 Extraia todas as transações financeiras deste extrato bancário e retorne APENAS um array JSON válido.
 Cada item deve ter: date (YYYY-MM-DD), description (string), amount (number positivo), type ("income" ou "expense").
+Pagamentos de fatura, estornos e depósitos são "income". Compras e débitos são "expense".
+Ignore linhas de cabeçalho, totais e informações institucionais.
 
 Retorne SOMENTE o array JSON, sem markdown, sem texto adicional.
-Exemplo: [{"date":"2025-01-15","description":"Supermercado","amount":120.50,"type":"expense"}]`,
+Exemplo: [{"date":"2026-01-15","description":"Supermercado","amount":120.50,"type":"expense"}]`,
               },
             ],
           },
@@ -65,20 +66,16 @@ Exemplo: [{"date":"2025-01-15","description":"Supermercado","amount":120.50,"typ
       })
 
       const content = message.content[0]
-      if (content.type !== 'text') throw new Error('Resposta inválida')
+      if (content.type !== 'text') throw new Error('Resposta inválida da IA')
 
-      // Extrair JSON do texto (remover possível markdown)
       const jsonMatch = content.text.match(/\[[\s\S]*\]/)
-      if (!jsonMatch) throw new Error('JSON não encontrado na resposta')
+      if (!jsonMatch) throw new Error('Nenhuma transação encontrada no arquivo')
 
-      const rawTransactions = JSON.parse(jsonMatch[0]) as Array<{
-        date: string
-        description: string
-        amount: number
-        type: 'income' | 'expense'
+      const raw = JSON.parse(jsonMatch[0]) as Array<{
+        date: string; description: string; amount: number; type: 'income' | 'expense'
       }>
 
-      const transactions = rawTransactions.map((t) => ({
+      const transactions = raw.map((t) => ({
         ...t,
         category: t.type === 'income' ? 'other_income' : 'other_expense',
       }))
@@ -88,7 +85,8 @@ Exemplo: [{"date":"2025-01-15","description":"Supermercado","amount":120.50,"typ
 
     return NextResponse.json({ error: 'Tipo de arquivo não suportado' }, { status: 400 })
   } catch (err) {
-    console.error('import-statement error:', err)
-    return NextResponse.json({ error: 'Erro ao processar arquivo' }, { status: 500 })
+    const message = err instanceof Error ? err.message : String(err)
+    console.error('import-statement error:', message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

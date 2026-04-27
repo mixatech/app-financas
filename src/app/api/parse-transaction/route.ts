@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
+import { checkAiFeature } from '@/lib/plan-gate'
 
 const client = new Anthropic()
 
@@ -35,6 +36,11 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+
+  const gate = await checkAiFeature(user.id, 'ai_chat')
+  if (!gate.allowed) {
+    return NextResponse.json({ error: gate.reason }, { status: 402 })
+  }
 
   const { text } = await req.json()
   if (!text?.trim()) return NextResponse.json({ error: 'Texto obrigatório' }, { status: 400 })
