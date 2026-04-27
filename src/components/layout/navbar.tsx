@@ -7,7 +7,7 @@ import { TrendingUp, LayoutDashboard, List, Users, LogOut, Menu, X } from 'lucid
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 
-export function Navbar({ email }: { email: string }) {
+export function Navbar({ email, planBadge }: { email: string; planBadge?: React.ReactNode }) {
   const [open, setOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
