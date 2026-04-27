@@ -10,6 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { INCOME_CATEGORIES, EXPENSE_CATEGORIES, Category } from '@/types'
+import { UpgradeModal } from '@/components/billing/upgrade-modal'
 
 interface ParsedTransaction {
   type: 'income' | 'expense'
@@ -32,6 +33,8 @@ export function TransactionChat({ onClose }: TransactionChatProps) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [upgradeReason, setUpgradeReason] = useState<'upgrade_required' | 'limit_reached'>('upgrade_required')
   const router = useRouter()
   const supabase = createClient()
 
@@ -47,6 +50,14 @@ export function TransactionChat({ onClose }: TransactionChatProps) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text }),
     })
+
+    if (res.status === 402) {
+      const data = await res.json()
+      setUpgradeReason(data.error as 'upgrade_required' | 'limit_reached')
+      setShowUpgradeModal(true)
+      setLoading(false)
+      return
+    }
 
     const json = await res.json()
 
@@ -256,6 +267,13 @@ export function TransactionChat({ onClose }: TransactionChatProps) {
           </div>
         </div>
       )}
+
+      <UpgradeModal
+        open={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        reason={upgradeReason}
+        feature="ai_chat"
+      />
     </div>
   )
 }

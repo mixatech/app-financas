@@ -1,14 +1,16 @@
 'use client'
 
 import { useState } from 'react'
+import type React from 'react'
 
 interface CheckoutButtonProps {
   plan: 'pro' | 'family'
   label: string
   className?: string
+  style?: React.CSSProperties
 }
 
-export function CheckoutButton({ plan, label, className }: CheckoutButtonProps) {
+export function CheckoutButton({ plan, label, className, style }: CheckoutButtonProps) {
   const [loading, setLoading] = useState(false)
 
   async function handleClick() {
@@ -31,6 +33,7 @@ export function CheckoutButton({ plan, label, className }: CheckoutButtonProps) 
       onClick={handleClick}
       disabled={loading}
       className={className}
+      style={style}
     >
       {loading ? 'Aguarde...' : label}
     </button>

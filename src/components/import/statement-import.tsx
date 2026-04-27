@@ -9,6 +9,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Card, CardType, CARD_TYPE_LABELS } from '@/types'
 import { ImportPreviewTable } from './import-preview-table'
+import { UpgradeModal } from '@/components/billing/upgrade-modal'
 
 interface ParsedTransaction {
   date: string
@@ -34,6 +35,8 @@ export function StatementImport({ cards, userId, familyId }: StatementImportProp
   const [transactions, setTransactions] = useState<ParsedTransaction[]>([])
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [upgradeReason, setUpgradeReason] = useState<'upgrade_required' | 'limit_reached'>('upgrade_required')
 
   function resetState() {
     setStep(1)
@@ -50,25 +53,38 @@ export function StatementImport({ cards, userId, familyId }: StatementImportProp
     setProcessing(true)
     setError('')
 
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('fileType', fileType)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('fileType', fileType)
 
-    const res = await fetch('/api/import-statement', { method: 'POST', body: formData })
-    const json = await res.json()
+      const res = await fetch('/api/import-statement', { method: 'POST', body: formData })
 
-    if (!res.ok) {
-      setError(json.error ?? 'Erro ao processar arquivo.')
+      if (res.status === 402) {
+        const data = await res.json()
+        setUpgradeReason(data.error as 'upgrade_required' | 'limit_reached')
+        setShowUpgradeModal(true)
+        return
+      }
+
+      const json = await res.json()
+
+      if (!res.ok) {
+        setError(json.error ?? 'Erro ao processar arquivo.')
+        return
+      }
+
+      setTransactions((json.transactions as Omit<ParsedTransaction, 'include'>[]).map((t) => ({ ...t, include: true })))
+      setStep(2)
+    } catch {
+      setError('Erro inesperado. Tente novamente.')
+    } finally {
       setProcessing(false)
-      return
     }
-
-    setTransactions((json.transactions as Omit<ParsedTransaction, 'include'>[]).map((t) => ({ ...t, include: true })))
-    setStep(2)
-    setProcessing(false)
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetState() }}>
       <DialogTrigger
         render={
@@ -140,7 +156,9 @@ export function StatementImport({ cards, userId, familyId }: StatementImportProp
               {processing ? (
                 <div className="flex flex-col items-center gap-2">
                   <div className="w-8 h-8 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin" />
-                  <p className="text-sm text-gray-500">Processando arquivo...</p>
+                  <p className="text-sm text-gray-500">
+                    {fileType === 'pdf' ? 'Analisando PDF com IA...' : 'Processando arquivo...'}
+                  </p>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2">
@@ -177,5 +195,13 @@ export function StatementImport({ cards, userId, familyId }: StatementImportProp
         )}
       </DialogContent>
     </Dialog>
+
+    <UpgradeModal
+      open={showUpgradeModal}
+      onClose={() => setShowUpgradeModal(false)}
+      reason={upgradeReason}
+      feature="pdf_import"
+    />
+  </>
   )
 }
