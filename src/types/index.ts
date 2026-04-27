@@ -142,3 +142,48 @@ export const MEMBER_COLORS = [
   '#6366f1',
   '#f43f5e',
 ]
+
+// ── Tipos para billing/SaaS ──────────────────────────────────────
+
+export type Plan = 'free' | 'pro' | 'family'
+export type SubscriptionStatus = 'active' | 'trialing' | 'canceled' | 'past_due'
+
+export interface Subscription {
+  id: string
+  user_id: string
+  stripe_customer_id: string | null
+  stripe_subscription_id: string | null
+  plan: Plan
+  status: SubscriptionStatus
+  trial_ends_at: string | null
+  current_period_start: string | null
+  current_period_end: string | null
+  created_at: string
+}
+
+export interface Usage {
+  id: string
+  owner_user_id: string
+  period: string
+  ai_chats_used: number
+  pdf_imports_used: number
+  updated_at: string
+}
+
+export const PLAN_LIMITS: Record<Plan, { ai_chats: number | null; pdf_imports: number | null; family_members: number }> = {
+  free:   { ai_chats: 0,    pdf_imports: 0,    family_members: 1 },
+  pro:    { ai_chats: 30,   pdf_imports: 2,    family_members: 2 },
+  family: { ai_chats: 200,  pdf_imports: null, family_members: 6 },
+}
+
+export const PLAN_LABELS: Record<Plan, string> = {
+  free: 'Gratuito',
+  pro: 'Pro',
+  family: 'Família',
+}
+
+export const PLAN_PRICES: Record<Plan, string> = {
+  free: 'R$0',
+  pro: 'R$19,90/mês',
+  family: 'R$39,90/mês',
+}
