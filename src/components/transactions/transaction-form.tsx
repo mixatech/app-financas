@@ -97,7 +97,8 @@ export function TransactionForm({
     setForm((f) => ({ ...f, type, category: firstCategory }))
   }
 
-  function handleCategoryChange(value: string) {
+  function handleCategoryChange(value: string | null) {
+    if (!value) return
     if (value === '__custom__') {
       setIsCustom(true)
       setForm((f) => ({ ...f, category: customCategory }))
