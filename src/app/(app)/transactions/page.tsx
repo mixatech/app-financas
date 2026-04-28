@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { TransactionList } from '@/components/transactions/transaction-list'
 import { TransactionFilters } from '@/components/transactions/transaction-filters'
 import { TransactionForm } from '@/components/transactions/transaction-form'
@@ -20,6 +21,7 @@ export default async function TransactionsPage({
   const params = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const db = createAdminClient()
 
   const now = new Date()
   const month = params.month ?? format(now, 'yyyy-MM')
@@ -28,7 +30,7 @@ export default async function TransactionsPage({
   const endDate = new Date(parseInt(year), parseInt(monthNum), 0).toISOString().split('T')[0]
 
   // Buscar membro do usuário (para cartões e família)
-  const { data: myMember } = await supabase
+  const { data: myMember } = await db
     .from('family_members')
     .select('id, family_id')
     .eq('user_id', user!.id)
@@ -40,7 +42,7 @@ export default async function TransactionsPage({
   // Buscar transações, cartões e membros em paralelo
   const [transactionsResult, cardsResult, membersResult] = await Promise.all([
     (async () => {
-      let query = supabase
+      let query = db
         .from('transactions')
         .select('*')
         .eq('user_id', user!.id)
@@ -54,10 +56,10 @@ export default async function TransactionsPage({
       return query
     })(),
     familyId
-      ? supabase.from('cards').select('*').eq('family_id', familyId)
+      ? db.from('cards').select('*').eq('family_id', familyId)
       : Promise.resolve({ data: [] }),
     familyId
-      ? supabase.from('family_members').select('*').eq('family_id', familyId)
+      ? db.from('family_members').select('*').eq('family_id', familyId)
       : Promise.resolve({ data: [] }),
   ])
 

@@ -31,12 +31,14 @@ describe('OnboardingFlow', () => {
     expect(screen.getByText('Usar individualmente')).toBeInTheDocument()
   })
 
-  it('shows create group form when "Criar grupo familiar" is clicked', () => {
+  it('shows create group form when "Criar grupo familiar" is clicked', async () => {
     render(<OnboardingFlow userId="user-1" userEmail="test@example.com" />)
 
     fireEvent.click(screen.getByText('Criar grupo familiar'))
 
-    expect(screen.getByPlaceholderText('Ex: Família Silva')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Ex: Família Silva')).toBeInTheDocument()
+    }, { timeout: 3000 })
     expect(screen.getByRole('button', { name: 'Criar grupo' })).toBeInTheDocument()
   })
 

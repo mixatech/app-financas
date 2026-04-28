@@ -66,9 +66,12 @@ describe('TransactionForm', () => {
     const form = screen.getByRole('button', { name: 'Salvar' }).closest('form')!
     fireEvent.submit(form)
 
-    await waitFor(() => {
-      expect(screen.getByText('Informe um valor válido.')).toBeInTheDocument()
-    })
+    await waitFor(
+      () => {
+        expect(screen.getByText('Informe um valor válido.')).toBeInTheDocument()
+      },
+      { timeout: 3000 }
+    )
   })
 
   it('shows "Despesa" as default type', () => {

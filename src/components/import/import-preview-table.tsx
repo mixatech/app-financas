@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { saveImportedTransactions } from '@/app/(app)/transactions/actions'
 import { INCOME_CATEGORIES, EXPENSE_CATEGORIES } from '@/types'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -49,7 +49,6 @@ export function ImportPreviewTable({
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
   function toggle(index: number) {
     onChange(transactions.map((t, i) => i === index ? { ...t, include: !t.include } : t))
@@ -66,7 +65,6 @@ export function ImportPreviewTable({
     setError('')
 
     const payload = toImport.map((t) => ({
-      user_id: userId,
       type: t.type,
       amount: t.amount,
       description: t.description,
@@ -77,15 +75,12 @@ export function ImportPreviewTable({
       source: fileType === 'csv' ? 'csv_import' : 'pdf_import',
     }))
 
-    // Inserir em lotes de 100
-    for (let i = 0; i < payload.length; i += 100) {
-      const batch = payload.slice(i, i + 100)
-      const { error } = await supabase.from('transactions').insert(batch)
-      if (error) { setError('Erro ao importar transações.'); setSaving(false); return }
-    }
+    const result = await saveImportedTransactions(payload)
+    if (result.error) { setError(`Erro ao importar: ${result.error}`); setSaving(false); return }
 
     setSaved(true)
-    router.refresh()
+    const firstDate = toImport[0].date.substring(0, 7) // YYYY-MM
+    router.push(`/transactions?month=${firstDate}`)
     setTimeout(onDone, 1200)
   }
 
