@@ -10,23 +10,32 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { TrendingUp } from 'lucide-react'
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('')
+export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
-  async function handleLogin(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
     setError('')
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres.')
+      return
+    }
+    if (password !== confirm) {
+      setError('As senhas não coincidem.')
+      return
+    }
+
+    setLoading(true)
+    const { error } = await supabase.auth.updateUser({ password })
 
     if (error) {
-      setError('E-mail ou senha inválidos. Verifique seus dados e tente novamente.')
+      setError('Não foi possível redefinir a senha. O link pode ter expirado — solicite um novo.')
       setLoading(false)
       return
     }
@@ -37,7 +46,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-white flex">
-      {/* Left panel */}
       <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-12" style={{ background: 'linear-gradient(135deg, #18181b 0%, #3b0764 100%)' }}>
         <div className="flex items-center gap-2.5">
           <div className="text-white p-2 rounded-xl" style={{ background: 'var(--brand-gradient)' }}>
@@ -47,16 +55,15 @@ export default function LoginPage() {
         </div>
         <div className="space-y-4">
           <p className="text-white text-3xl font-bold leading-snug">
-            Controle financeiro inteligente para toda a família.
+            Defina uma nova senha.
           </p>
           <p className="text-gray-400 text-base leading-relaxed">
-            Gerencie receitas, despesas e o orçamento da família em um só lugar — com IA que entende sua linguagem.
+            Escolha uma senha segura para proteger sua conta.
           </p>
         </div>
         <p className="text-gray-600 text-sm">© 2025 Finxa · Mixa. Todos os direitos reservados.</p>
       </div>
 
-      {/* Right panel */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="flex items-center gap-2 mb-10 lg:hidden">
@@ -66,40 +73,35 @@ export default function LoginPage() {
             <span className="font-bold text-gray-900 text-lg">Finxa</span>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">Entrar</h1>
-          <p className="text-gray-500 mb-8">Bem-vindo de volta. Acesse sua conta.</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">Nova senha</h1>
+          <p className="text-gray-500 mb-8">Escolha uma senha com pelo menos 6 caracteres.</p>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
                 {error}
               </div>
             )}
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700">E-mail</Label>
+              <Label htmlFor="password" className="text-sm font-medium text-gray-700">Nova senha</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="password"
+                type="password"
+                placeholder="Mínimo 6 caracteres"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="h-11 border-gray-200 rounded-xl"
                 required
               />
             </div>
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700">Senha</Label>
-                <Link href="/auth/forgot-password" className="text-xs font-medium" style={{ color: '#7B2FBE' }}>
-                  Esqueceu a senha?
-                </Link>
-              </div>
+              <Label htmlFor="confirm" className="text-sm font-medium text-gray-700">Confirmar senha</Label>
               <Input
-                id="password"
+                id="confirm"
                 type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Repita a senha"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
                 className="h-11 border-gray-200 rounded-xl"
                 required
               />
@@ -110,14 +112,13 @@ export default function LoginPage() {
               className="w-full h-11 text-white font-semibold rounded-xl transition-opacity disabled:opacity-60"
               style={{ background: 'var(--brand-gradient)' }}
             >
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading ? 'Salvando...' : 'Salvar nova senha'}
             </button>
           </form>
 
           <p className="text-sm text-gray-400 text-center mt-6">
-            Não tem conta?{' '}
-            <Link href="/auth/signup" className="font-semibold" style={{ color: '#7B2FBE' }}>
-              Criar conta grátis
+            <Link href="/auth/login" className="font-semibold" style={{ color: '#7B2FBE' }}>
+              Voltar para o login
             </Link>
           </p>
         </div>

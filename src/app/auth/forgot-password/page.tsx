@@ -9,35 +9,24 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { TrendingUp, Mail, CheckCircle2 } from 'lucide-react'
 
-export default function SignupPage() {
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
   const supabase = createClient()
 
-  async function handleSignup(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    if (password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres.')
-      setLoading(false)
-      return
-    }
-
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-      },
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?type=recovery`,
     })
 
     if (error) {
-      setError(error.message)
+      setError('Não foi possível enviar o e-mail. Verifique o endereço e tente novamente.')
       setLoading(false)
       return
     }
@@ -56,9 +45,9 @@ export default function SignupPage() {
             </div>
           </div>
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-gray-900">Confirme seu e-mail</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Verifique seu e-mail</h1>
             <p className="text-gray-500 leading-relaxed">
-              Enviamos um link de confirmação para{' '}
+              Enviamos um link para redefinir sua senha para{' '}
               <span className="font-semibold text-gray-700">{email}</span>.
             </p>
           </div>
@@ -78,9 +67,8 @@ export default function SignupPage() {
             </ul>
           </div>
           <p className="text-sm text-gray-400">
-            Já confirmou?{' '}
             <Link href="/auth/login" className="font-semibold" style={{ color: '#7B2FBE' }}>
-              Fazer login
+              Voltar para o login
             </Link>
           </p>
         </div>
@@ -90,7 +78,6 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-white flex">
-      {/* Left panel */}
       <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-12" style={{ background: 'linear-gradient(135deg, #18181b 0%, #3b0764 100%)' }}>
         <div className="flex items-center gap-2.5">
           <div className="text-white p-2 rounded-xl" style={{ background: 'var(--brand-gradient)' }}>
@@ -100,26 +87,15 @@ export default function SignupPage() {
         </div>
         <div className="space-y-4">
           <p className="text-white text-3xl font-bold leading-snug">
-            Organize as finanças da sua família de forma inteligente.
+            Recupere o acesso à sua conta.
           </p>
-          <ul className="space-y-3 text-gray-400 text-sm">
-            {[
-              'Grupos familiares com login individual',
-              'Chat IA: registre gastos em linguagem natural',
-              'Importe extratos PDF e CSV automaticamente',
-              'Dashboard consolidado por membro',
-            ].map((item) => (
-              <li key={item} className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: '#7B2FBE' }} />
-                {item}
-              </li>
-            ))}
-          </ul>
+          <p className="text-gray-400 text-base leading-relaxed">
+            Enviaremos um link seguro para você redefinir sua senha.
+          </p>
         </div>
         <p className="text-gray-600 text-sm">© 2025 Finxa · Mixa. Todos os direitos reservados.</p>
       </div>
 
-      {/* Right panel */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="flex items-center gap-2 mb-10 lg:hidden">
@@ -129,10 +105,10 @@ export default function SignupPage() {
             <span className="font-bold text-gray-900 text-lg">Finxa</span>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">Criar conta</h1>
-          <p className="text-gray-500 mb-8">Gratuito. Sem cartão de crédito.</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">Esqueceu a senha?</h1>
+          <p className="text-gray-500 mb-8">Digite seu e-mail e enviaremos um link para redefinir sua senha.</p>
 
-          <form onSubmit={handleSignup} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
                 {error}
@@ -150,37 +126,20 @@ export default function SignupPage() {
                 required
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-sm font-medium text-gray-700">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Mínimo 6 caracteres"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-11 border-gray-200 rounded-xl"
-                required
-              />
-            </div>
             <button
               type="submit"
               disabled={loading}
               className="w-full h-11 text-white font-semibold rounded-xl transition-opacity disabled:opacity-60"
               style={{ background: 'var(--brand-gradient)' }}
             >
-              {loading ? 'Criando conta...' : 'Criar conta grátis'}
+              {loading ? 'Enviando...' : 'Enviar link de recuperação'}
             </button>
           </form>
 
-          <p className="text-xs text-gray-400 text-center mt-4">
-            Após o cadastro, você receberá um e-mail para confirmar sua conta.
-            <br />Verifique também a pasta de spam.
-          </p>
-
           <p className="text-sm text-gray-400 text-center mt-6">
-            Já tem conta?{' '}
+            Lembrou a senha?{' '}
             <Link href="/auth/login" className="font-semibold" style={{ color: '#7B2FBE' }}>
-              Fazer login
+              Voltar para o login
             </Link>
           </p>
         </div>
