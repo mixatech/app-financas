@@ -2,19 +2,8 @@
 
 export type TransactionType = 'income' | 'expense'
 
-export type Category =
-  | 'salary'
-  | 'freelance'
-  | 'investment'
-  | 'other_income'
-  | 'food'
-  | 'transport'
-  | 'housing'
-  | 'health'
-  | 'education'
-  | 'entertainment'
-  | 'clothing'
-  | 'other_expense'
+// Category é string livre — banco aceita qualquer texto; defaults abaixo
+export type Category = string
 
 export interface Transaction {
   id: string
@@ -41,27 +30,38 @@ export interface TransactionFormData {
   date: string
 }
 
-export const INCOME_CATEGORIES: { value: Category; label: string }[] = [
+export const INCOME_CATEGORIES: { value: string; label: string }[] = [
   { value: 'salary', label: 'Salário' },
   { value: 'freelance', label: 'Freelance' },
   { value: 'investment', label: 'Investimento' },
+  { value: 'bonus', label: 'Bônus / 13º' },
+  { value: 'rental', label: 'Aluguel recebido' },
+  { value: 'refund', label: 'Reembolso' },
+  { value: 'gift_income', label: 'Presente recebido' },
   { value: 'other_income', label: 'Outras receitas' },
 ]
 
-export const EXPENSE_CATEGORIES: { value: Category; label: string }[] = [
+export const EXPENSE_CATEGORIES: { value: string; label: string }[] = [
   { value: 'food', label: 'Alimentação' },
+  { value: 'restaurant', label: 'Restaurante / Delivery' },
   { value: 'transport', label: 'Transporte' },
   { value: 'housing', label: 'Moradia' },
   { value: 'health', label: 'Saúde' },
   { value: 'education', label: 'Educação' },
   { value: 'entertainment', label: 'Lazer' },
+  { value: 'subscriptions', label: 'Assinaturas' },
   { value: 'clothing', label: 'Vestuário' },
+  { value: 'beauty', label: 'Beleza / Higiene' },
+  { value: 'pets', label: 'Pets' },
+  { value: 'travel', label: 'Viagem' },
+  { value: 'electronics', label: 'Eletrônicos' },
+  { value: 'gifts', label: 'Presentes / Doações' },
   { value: 'other_expense', label: 'Outras despesas' },
 ]
 
 export const ALL_CATEGORIES = [...INCOME_CATEGORIES, ...EXPENSE_CATEGORIES]
 
-export function getCategoryLabel(category: Category): string {
+export function getCategoryLabel(category: string): string {
   return ALL_CATEGORIES.find((c) => c.value === category)?.label ?? category
 }
 
@@ -69,14 +69,25 @@ export const CATEGORY_COLORS: Record<string, string> = {
   salary: '#7B2FBE',
   freelance: '#2D8EFF',
   investment: '#8b5cf6',
+  bonus: '#7c3aed',
+  rental: '#0ea5e9',
+  refund: '#06b6d4',
+  gift_income: '#10b981',
   other_income: '#06b6d4',
   food: '#f97316',
+  restaurant: '#ef4444',
   transport: '#eab308',
   housing: '#ec4899',
   health: '#14b8a6',
   education: '#6366f1',
   entertainment: '#f43f5e',
+  subscriptions: '#8b5cf6',
   clothing: '#a855f7',
+  beauty: '#e879f9',
+  pets: '#84cc16',
+  travel: '#0891b2',
+  electronics: '#64748b',
+  gifts: '#f59e0b',
   other_expense: '#94a3b8',
 }
 

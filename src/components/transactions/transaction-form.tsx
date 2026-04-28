@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Input } from '@/components/ui/input'
@@ -73,15 +73,38 @@ export function TransactionForm({
   const [cardId, setCardId] = useState<string>(transaction?.card_id ?? '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [customCategory, setCustomCategory] = useState('')
+  const [isCustom, setIsCustom] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
   const hasFamily = familyMembers.length > 0
   const categories = form.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
 
+  // Detecta se categoria salva não está na lista (ex: ao editar transação antiga com categoria custom)
+  useEffect(() => {
+    const known = categories.some((c) => c.value === form.category)
+    if (!known && form.category) {
+      setIsCustom(true)
+      setCustomCategory(form.category)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   function handleTypeChange(type: 'income' | 'expense') {
     const firstCategory = type === 'income' ? 'salary' : 'food'
-    setForm((f) => ({ ...f, type, category: firstCategory as never }))
+    setIsCustom(false)
+    setCustomCategory('')
+    setForm((f) => ({ ...f, type, category: firstCategory }))
+  }
+
+  function handleCategoryChange(value: string) {
+    if (value === '__custom__') {
+      setIsCustom(true)
+      setForm((f) => ({ ...f, category: customCategory }))
+    } else {
+      setIsCustom(false)
+      setForm((f) => ({ ...f, category: value }))
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -215,8 +238,8 @@ export function TransactionForm({
           <div className="space-y-1.5">
             <Label className="text-sm font-medium text-gray-700">Categoria</Label>
             <Select
-              value={form.category}
-              onValueChange={(v) => setForm((f) => ({ ...f, category: v as never }))}
+              value={isCustom ? '__custom__' : form.category}
+              onValueChange={handleCategoryChange}
             >
               <SelectTrigger className="h-11 rounded-xl border-gray-200">
                 <SelectValue />
@@ -227,8 +250,21 @@ export function TransactionForm({
                     {c.label}
                   </SelectItem>
                 ))}
+                <SelectItem value="__custom__">+ Personalizada...</SelectItem>
               </SelectContent>
             </Select>
+            {isCustom && (
+              <Input
+                placeholder="Nome da categoria"
+                value={customCategory}
+                onChange={(e) => {
+                  setCustomCategory(e.target.value)
+                  setForm((f) => ({ ...f, category: e.target.value }))
+                }}
+                className="h-11 rounded-xl border-gray-200 mt-2"
+                autoFocus
+              />
+            )}
           </div>
 
           <div className="space-y-1.5">
