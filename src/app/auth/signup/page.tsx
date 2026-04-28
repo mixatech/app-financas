@@ -90,7 +90,7 @@ export default function SignupPage() {
           <div className="text-white p-2 rounded-xl" style={{ background: 'var(--brand-gradient)' }}>
             <TrendingUp className="h-5 w-5" />
           </div>
-          <span className="text-white font-bold text-xl tracking-tight">FamilyFinance</span>
+          <span className="text-white font-bold text-xl tracking-tight">Finxa</span>
         </div>
         <div className="space-y-4">
           <p className="text-white text-3xl font-bold leading-snug">
@@ -110,7 +110,7 @@ export default function SignupPage() {
             ))}
           </ul>
         </div>
-        <p className="text-gray-600 text-sm">© 2025 FamilyFinance · Mixa. Todos os direitos reservados.</p>
+        <p className="text-gray-600 text-sm">© 2025 Finxa · Mixa. Todos os direitos reservados.</p>
       </div>
 
       {/* Right panel */}
@@ -120,7 +120,7 @@ export default function SignupPage() {
             <div className="text-white p-1.5 rounded-lg" style={{ background: 'var(--brand-gradient)' }}>
               <TrendingUp className="h-4 w-4" />
             </div>
-            <span className="font-bold text-gray-900 text-lg">FamilyFinance</span>
+            <span className="font-bold text-gray-900 text-lg">Finxa</span>
           </div>
 
           <h1 className="text-3xl font-bold text-gray-900 mb-1">Criar conta</h1>

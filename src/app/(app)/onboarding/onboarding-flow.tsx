@@ -28,17 +28,21 @@ export function OnboardingFlow({ userEmail }: OnboardingFlowProps) {
     setLoading(true)
     setError('')
 
-    const result = await createFamilyGroup(groupName, displayName)
+    try {
+      const result = await createFamilyGroup(groupName, displayName)
 
-    if (result.error) {
-      console.error('[Onboarding] Erro ao criar grupo:', result.error)
-      setError(result.error)
+      if (result.error) {
+        setError(result.error)
+        setLoading(false)
+        return
+      }
+
+      router.push('/family')
+      router.refresh()
+    } catch (e) {
+      setError('Erro inesperado. Tente novamente.')
       setLoading(false)
-      return
     }
-
-    router.push('/family')
-    router.refresh()
   }
 
   async function handleJoinByLink() {
@@ -60,7 +64,7 @@ export function OnboardingFlow({ userEmail }: OnboardingFlowProps) {
           <div className="text-white p-2 rounded-xl" style={{ background: 'var(--brand-gradient)' }}>
             <TrendingUp className="h-5 w-5" />
           </div>
-          <span className="font-bold text-gray-900 text-xl">FamilyFinance</span>
+          <span className="font-bold text-gray-900 text-xl">Finxa</span>
         </div>
 
         {step === 'choose' && (

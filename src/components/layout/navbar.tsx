@@ -35,7 +35,7 @@ export function Navbar({ email, planBadge }: { email: string; planBadge?: React.
             <div className="text-white p-1.5 rounded-lg" style={{ background: 'var(--brand-gradient)' }}>
               <TrendingUp className="h-4 w-4" />
             </div>
-            <span className="font-bold text-gray-900 text-lg tracking-tight">FamilyFinance</span>
+            <span className="font-bold text-gray-900 text-lg tracking-tight">Finxa</span>
           </Link>
 
           {/* Nav links */}

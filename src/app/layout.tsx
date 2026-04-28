@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FinançasPRO - Gestão Financeira Pessoal",
-  description: "Controle suas finanças pessoais de forma simples e visual",
+  title: "Finxa — sua assistente financeira da família",
+  description: "Organize sua vida financeira com IA. Sem planilha, sem complicação.",
 };
 
 export default function RootLayout({
