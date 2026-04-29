@@ -3,14 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { FamilyGroup, FamilyMember, Card, CARD_TYPE_LABELS, CardType, MEMBER_COLORS, BANKS } from '@/types'
+import { FamilyGroup, FamilyMember, Card, Settlement, MemberSplitRatio } from '@/types'
 import { MemberAvatar } from '@/components/family/member-avatar'
-import { Users, CreditCard, Plus, Copy, Check, Crown, Trash2, X } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
+import { BalancesTab } from '@/components/family/balances-tab'
+import { MemberBalance } from '@/lib/balances'
+import { Users, Plus, Copy, Check, Crown, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface FamilyClientProps {
@@ -19,24 +16,24 @@ interface FamilyClientProps {
   cards: Card[]
   currentUserId: string
   currentMember: FamilyMember
+  balances: MemberBalance[]
+  settlements: Settlement[]
+  splitRatios: MemberSplitRatio[]
 }
 
-type Tab = 'members' | 'cards'
+type Tab = 'members' | 'balances'
 
-export function FamilyClient({ group, members: initialMembers, cards: initialCards, currentUserId, currentMember }: FamilyClientProps) {
+export function FamilyClient({ group, members: initialMembers, currentUserId, currentMember, balances, settlements }: FamilyClientProps) {
   const [tab, setTab] = useState<Tab>('members')
   const [members, setMembers] = useState(initialMembers)
-  const [cards, setCards] = useState(initialCards)
   const [inviteUrl, setInviteUrl] = useState('')
   const [copied, setCopied] = useState(false)
   const [generatingInvite, setGeneratingInvite] = useState(false)
-  const [showCardForm, setShowCardForm] = useState(false)
-  const [cardForm, setCardForm] = useState({ name: '', type: 'credit' as CardType, last_digits: '', color: '#2D8EFF', member_id: currentMember.id, bank: '' })
-  const [savingCard, setSavingCard] = useState(false)
-  const [cardError, setCardError] = useState('')
-  const router = useRouter()
   const supabase = createClient()
   const isAdmin = currentMember.role === 'admin'
+
+  // router kept for potential future refresh needs
+  const _router = useRouter()
 
   async function generateInvite() {
     setGeneratingInvite(true)
@@ -62,39 +59,6 @@ export function FamilyClient({ group, members: initialMembers, cards: initialCar
     setMembers((m) => m.filter((x) => x.id !== memberId))
   }
 
-  async function saveCard() {
-    if (!cardForm.name.trim()) return
-    setSavingCard(true)
-    setCardError('')
-
-    const { data, error } = await supabase
-      .from('cards')
-      .insert({
-        family_id: group.id,
-        member_id: cardForm.member_id,
-        name: cardForm.name.trim(),
-        type: cardForm.type,
-        last_digits: cardForm.last_digits || null,
-        color: cardForm.color,
-        bank: cardForm.bank || null,
-      })
-      .select()
-      .single()
-
-    if (error) { setCardError('Erro ao salvar cartão.'); setSavingCard(false); return }
-    setCards((c) => [...c, data as Card])
-    setShowCardForm(false)
-    setCardForm({ name: '', type: 'credit', last_digits: '', color: '#2D8EFF', member_id: currentMember.id, bank: '' })
-    setSavingCard(false)
-    router.refresh()
-  }
-
-  async function deleteCard(cardId: string) {
-    if (!confirm('Excluir este cartão?')) return
-    await supabase.from('cards').delete().eq('id', cardId)
-    setCards((c) => c.filter((x) => x.id !== cardId))
-  }
-
   return (
     <div className="space-y-6 max-w-2xl">
       {/* Header */}
@@ -106,16 +70,13 @@ export function FamilyClient({ group, members: initialMembers, cards: initialCar
 
       {/* Tabs */}
       <div className="flex gap-1 p-1 bg-gray-100 rounded-xl w-fit">
-        {([['members', 'Membros', Users], ['cards', 'Cartões', CreditCard]] as const).map(([key, label, Icon]) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
+        {([['members', 'Membros'], ['balances', 'Saldos']] as const).map(([t, label]) => (
+          <button key={t} onClick={() => setTab(t)}
             className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
-              tab === key ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
-            )}
-          >
-            <Icon className="h-4 w-4" />
+              'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all',
+              tab === t ? 'bg-white text-[#7B2FBE] shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            )}>
+            {t === 'members' && <Users className="h-4 w-4" />}
             {label}
           </button>
         ))}
@@ -168,20 +129,13 @@ export function FamilyClient({ group, members: initialMembers, cards: initialCar
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold text-gray-800">{m.display_name}</p>
-                    {m.role === 'admin' && (
-                      <Crown className="h-3.5 w-3.5 text-amber-500" />
-                    )}
-                    {m.user_id === currentUserId && (
-                      <span className="text-xs text-gray-400">(você)</span>
-                    )}
+                    {m.role === 'admin' && <Crown className="h-3.5 w-3.5 text-amber-500" />}
+                    {m.user_id === currentUserId && <span className="text-xs text-gray-400">(você)</span>}
                   </div>
                   <p className="text-xs text-gray-400">{m.role === 'admin' ? 'Administrador' : 'Membro'}</p>
                 </div>
                 {isAdmin && m.user_id !== currentUserId && (
-                  <button
-                    onClick={() => removeMember(m.id)}
-                    className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50"
-                  >
+                  <button onClick={() => removeMember(m.id)} className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 )}
@@ -191,158 +145,12 @@ export function FamilyClient({ group, members: initialMembers, cards: initialCar
         </div>
       )}
 
-      {/* Cards tab */}
-      {tab === 'cards' && (
-        <div className="space-y-4">
-          <div className="flex justify-end">
-            <button
-              onClick={() => setShowCardForm(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
-              style={{ background: 'var(--brand-gradient)' }}
-            >
-              <Plus className="h-4 w-4" />
-              Novo cartão
-            </button>
-          </div>
-
-          {showCardForm && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="font-semibold text-gray-800">Novo cartão</p>
-                <button onClick={() => setShowCardForm(false)} className="text-gray-400 hover:text-gray-600">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              {cardError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
-                  {cardError}
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-700">Nome do cartão</Label>
-                  <Input
-                    placeholder="Ex: Nubank Mylena"
-                    value={cardForm.name}
-                    onChange={(e) => setCardForm((f) => ({ ...f, name: e.target.value }))}
-                    className="h-10 rounded-xl border-gray-200"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-700">Banco</Label>
-                  <Select value={cardForm.bank} onValueChange={(v) => setCardForm((f) => ({ ...f, bank: v ?? '' }))}>
-                    <SelectTrigger className="h-10 rounded-xl border-gray-200">
-                      <SelectValue placeholder="Selecionar banco..." />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      <SelectItem value="">Não informar</SelectItem>
-                      {BANKS.map((b) => (
-                        <SelectItem key={b} value={b}>{b}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-700">Tipo</Label>
-                  <Select value={cardForm.type} onValueChange={(v) => setCardForm((f) => ({ ...f, type: v as CardType }))}>
-                    <SelectTrigger className="h-10 rounded-xl border-gray-200">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      {Object.entries(CARD_TYPE_LABELS).map(([value, label]) => (
-                        <SelectItem key={value} value={value}>{label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-700">Últimos 4 dígitos</Label>
-                  <Input
-                    placeholder="0000"
-                    maxLength={4}
-                    value={cardForm.last_digits}
-                    onChange={(e) => setCardForm((f) => ({ ...f, last_digits: e.target.value.replace(/\D/g, '') }))}
-                    className="h-10 rounded-xl border-gray-200"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-700">Membro</Label>
-                  <Select value={cardForm.member_id} onValueChange={(v) => setCardForm((f) => ({ ...f, member_id: v ?? '' }))}>
-                    <SelectTrigger className="h-10 rounded-xl border-gray-200">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      {members.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>{m.display_name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-700">Cor</Label>
-                  <div className="flex gap-2 flex-wrap">
-                    {MEMBER_COLORS.map((c) => (
-                      <button
-                        key={c}
-                        onClick={() => setCardForm((f) => ({ ...f, color: c }))}
-                        className={cn('w-7 h-7 rounded-full border-2 transition-transform', cardForm.color === c ? 'border-gray-800 scale-110' : 'border-transparent')}
-                        style={{ backgroundColor: c }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-1">
-                <button onClick={() => setShowCardForm(false)} className="flex-1 h-10 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50">
-                  Cancelar
-                </button>
-                <button
-                  onClick={saveCard}
-                  disabled={savingCard || !cardForm.name.trim()}
-                  className="flex-1 h-10 rounded-xl text-white text-sm font-semibold disabled:opacity-60"
-                  style={{ background: 'var(--brand-gradient)' }}
-                >
-                  {savingCard ? 'Salvando...' : 'Salvar cartão'}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {cards.length === 0 && !showCardForm ? (
-            <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-              <p className="text-gray-800 font-semibold">Nenhum cartão cadastrado</p>
-              <p className="text-gray-400 text-sm mt-1">Adicione os cartões dos membros do grupo</p>
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              {cards.map((card, i) => {
-                const owner = members.find((m) => m.id === card.member_id)
-                return (
-                  <div key={card.id} className={`flex items-center gap-4 px-5 py-4 ${i !== cards.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: card.color }}>
-                      <CreditCard className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-800">
-                        {card.name}
-                        {card.last_digits && <span className="text-gray-400 font-normal"> •••• {card.last_digits}</span>}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {CARD_TYPE_LABELS[card.type]}{card.bank ? ` · ${card.bank}` : ''} · {owner?.display_name ?? '—'}
-                      </p>
-                    </div>
-                    <button onClick={() => deleteCard(card.id)} className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+      {/* Balances tab */}
+      {tab === 'balances' && (
+        <BalancesTab
+          balances={balances} myMemberId={currentMember.id}
+          familyId={group.id} settlements={settlements} members={members}
+        />
       )}
     </div>
   )
