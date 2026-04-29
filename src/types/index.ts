@@ -20,6 +20,8 @@ export interface Transaction {
   spent_by_member_id?: string | null
   card_id?: string | null
   source?: TransactionSource
+  scope?: 'personal' | 'couple' | 'family' | 'for_member'
+  beneficiary_id?: string | null
 }
 
 export interface TransactionFormData {
@@ -111,6 +113,7 @@ export interface FamilyMember {
   display_name: string
   role: MemberRole
   color: string
+  visibility_scope?: 'own' | 'couple' | 'family' | 'all'
   created_at: string
 }
 
@@ -222,4 +225,39 @@ export const PLAN_PRICES: Record<Plan, string> = {
   free: 'R$0',
   pro: 'R$19,90/mês',
   family: 'R$39,90/mês',
+}
+
+// ── Tipos para split de gastos ───────────────────────────────────
+
+export type TransactionScope = 'personal' | 'couple' | 'family' | 'for_member'
+
+export interface Settlement {
+  id: string
+  family_id: string
+  from_member_id: string
+  to_member_id: string
+  amount: number
+  note: string | null
+  settled_at: string
+  created_at: string
+}
+
+export interface MemberSplitRatio {
+  id: string
+  family_id: string
+  member_a_id: string
+  member_b_id: string
+  ratio_a: number
+  ratio_b: number
+  updated_at: string
+}
+
+export interface CustomCategory {
+  id: string
+  family_id: string
+  name: string
+  type: 'income' | 'expense'
+  color: string
+  emoji: string
+  created_at: string
 }
