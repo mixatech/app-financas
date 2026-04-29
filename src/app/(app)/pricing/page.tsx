@@ -70,7 +70,7 @@ export default function PricingPage() {
         <p className="text-xs font-semibold uppercase tracking-widest text-violet-300 mb-3">
           Planos & Preços
         </p>
-        <h1 className="text-4xl font-bold text-white mb-4">
+        <h1 className="text-2xl sm:text-4xl font-bold text-white mb-4">
           Controle total das suas finanças
         </h1>
         <p className="text-lg text-gray-300 max-w-xl mx-auto">
@@ -126,7 +126,7 @@ export default function PricingPage() {
                 </p>
                 <div className="flex items-end gap-1 mb-1">
                   <span
-                    className={`text-4xl font-bold ${
+                    className={`text-3xl sm:text-4xl font-bold ${
                       isHighlight ? 'text-white' : 'text-gray-900'
                     }`}
                   >

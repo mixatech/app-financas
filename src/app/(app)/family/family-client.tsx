@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { FamilyGroup, FamilyMember, Card, CARD_TYPE_LABELS, CardType, MEMBER_COLORS } from '@/types'
+import { FamilyGroup, FamilyMember, Card, CARD_TYPE_LABELS, CardType, MEMBER_COLORS, BANKS } from '@/types'
 import { MemberAvatar } from '@/components/family/member-avatar'
 import { Users, CreditCard, Plus, Copy, Check, Crown, Trash2, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -31,7 +31,7 @@ export function FamilyClient({ group, members: initialMembers, cards: initialCar
   const [copied, setCopied] = useState(false)
   const [generatingInvite, setGeneratingInvite] = useState(false)
   const [showCardForm, setShowCardForm] = useState(false)
-  const [cardForm, setCardForm] = useState({ name: '', type: 'credit' as CardType, last_digits: '', color: '#2D8EFF', member_id: currentMember.id })
+  const [cardForm, setCardForm] = useState({ name: '', type: 'credit' as CardType, last_digits: '', color: '#2D8EFF', member_id: currentMember.id, bank: '' })
   const [savingCard, setSavingCard] = useState(false)
   const [cardError, setCardError] = useState('')
   const router = useRouter()
@@ -76,6 +76,7 @@ export function FamilyClient({ group, members: initialMembers, cards: initialCar
         type: cardForm.type,
         last_digits: cardForm.last_digits || null,
         color: cardForm.color,
+        bank: cardForm.bank || null,
       })
       .select()
       .single()
@@ -83,7 +84,7 @@ export function FamilyClient({ group, members: initialMembers, cards: initialCar
     if (error) { setCardError('Erro ao salvar cartão.'); setSavingCard(false); return }
     setCards((c) => [...c, data as Card])
     setShowCardForm(false)
-    setCardForm({ name: '', type: 'credit', last_digits: '', color: '#2D8EFF', member_id: currentMember.id })
+    setCardForm({ name: '', type: 'credit', last_digits: '', color: '#2D8EFF', member_id: currentMember.id, bank: '' })
     setSavingCard(false)
     router.refresh()
   }
@@ -230,6 +231,20 @@ export function FamilyClient({ group, members: initialMembers, cards: initialCar
                   />
                 </div>
                 <div className="space-y-1.5">
+                  <Label className="text-sm font-medium text-gray-700">Banco</Label>
+                  <Select value={cardForm.bank} onValueChange={(v) => setCardForm((f) => ({ ...f, bank: v ?? '' }))}>
+                    <SelectTrigger className="h-10 rounded-xl border-gray-200">
+                      <SelectValue placeholder="Selecionar banco..." />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value="">Não informar</SelectItem>
+                      {BANKS.map((b) => (
+                        <SelectItem key={b} value={b}>{b}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
                   <Label className="text-sm font-medium text-gray-700">Tipo</Label>
                   <Select value={cardForm.type} onValueChange={(v) => setCardForm((f) => ({ ...f, type: v as CardType }))}>
                     <SelectTrigger className="h-10 rounded-xl border-gray-200">
@@ -316,7 +331,7 @@ export function FamilyClient({ group, members: initialMembers, cards: initialCar
                         {card.last_digits && <span className="text-gray-400 font-normal"> •••• {card.last_digits}</span>}
                       </p>
                       <p className="text-xs text-gray-400">
-                        {CARD_TYPE_LABELS[card.type]} · {owner?.display_name ?? '—'}
+                        {CARD_TYPE_LABELS[card.type]}{card.bank ? ` · ${card.bank}` : ''} · {owner?.display_name ?? '—'}
                       </p>
                     </div>
                     <button onClick={() => deleteCard(card.id)} className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50">

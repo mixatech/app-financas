@@ -100,18 +100,18 @@ export default async function TransactionsPage({
       </div>
 
       {transactions.length > 0 && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl border border-gray-100 px-5 py-3 flex flex-col">
             <span className="text-xs text-gray-400 mb-1">Receitas</span>
-            <span className="text-base font-bold" style={{ color: '#7B2FBE' }}>{fmt(totalIncome)}</span>
+            <span className="text-base font-bold truncate" style={{ color: '#7B2FBE' }}>{fmt(totalIncome)}</span>
           </div>
           <div className="bg-white rounded-xl border border-gray-100 px-5 py-3 flex flex-col">
             <span className="text-xs text-gray-400 mb-1">Despesas</span>
-            <span className="text-base font-bold text-gray-800">{fmt(totalExpense)}</span>
+            <span className="text-base font-bold text-gray-800 truncate">{fmt(totalExpense)}</span>
           </div>
           <div className={`rounded-xl border px-5 py-3 flex flex-col ${balance >= 0 ? 'bg-purple-50 border-purple-100' : 'bg-red-50 border-red-100'}`}>
             <span className="text-xs text-gray-400 mb-1">Saldo</span>
-            <span className="text-base font-bold" style={{ color: balance >= 0 ? '#7B2FBE' : '#ef4444' }}>
+            <span className="text-base font-bold truncate" style={{ color: balance >= 0 ? '#7B2FBE' : '#ef4444' }}>
               {fmt(balance)}
             </span>
           </div>

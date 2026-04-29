@@ -122,8 +122,33 @@ export interface Card {
   type: CardType
   last_digits: string | null
   color: string
+  bank: string | null
   created_at: string
 }
+
+export const BANKS = [
+  'Nubank',
+  'Itaú',
+  'Bradesco',
+  'Santander',
+  'Caixa Econômica Federal',
+  'Banco do Brasil',
+  'BTG Pactual',
+  'Inter',
+  'C6 Bank',
+  'XP',
+  'Neon',
+  'PicPay',
+  'Mercado Pago',
+  'PagSeguro',
+  'Sicoob',
+  'Sicredi',
+  'Safra',
+  'Banco Original',
+  'BMG',
+  'Modal',
+  'Outro',
+]
 
 export interface FamilyInvite {
   id: string

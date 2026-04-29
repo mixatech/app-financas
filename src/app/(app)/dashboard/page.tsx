@@ -121,21 +121,21 @@ export default async function DashboardPage({
         <p className="text-xs font-medium text-zinc-400 mb-4">
           Resumo do mês
         </p>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="rounded-xl bg-white/10 border border-white/10 p-4">
             <div className="text-xs text-violet-300 mb-1">Receitas</div>
-            <div className="text-xl font-bold text-white">{fmt(totalIncome)}</div>
+            <div className="text-base sm:text-xl font-bold text-white truncate">{fmt(totalIncome)}</div>
           </div>
           <div className="rounded-xl bg-white/10 border border-white/10 p-4">
             <div className="text-xs text-pink-300 mb-1">Despesas</div>
-            <div className="text-xl font-bold text-white">{fmt(totalExpense)}</div>
+            <div className="text-base sm:text-xl font-bold text-white truncate">{fmt(totalExpense)}</div>
           </div>
           <div
             className="rounded-xl border p-4"
             style={{ background: 'rgba(16,185,129,0.2)', borderColor: 'rgba(16,185,129,0.3)' }}
           >
             <div className="text-xs text-emerald-300 mb-1">Saldo</div>
-            <div className="text-xl font-bold text-emerald-300">{fmt(balance)}</div>
+            <div className="text-base sm:text-xl font-bold text-emerald-300 truncate">{fmt(balance)}</div>
           </div>
         </div>
       </div>
