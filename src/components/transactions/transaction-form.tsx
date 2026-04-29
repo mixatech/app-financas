@@ -71,6 +71,12 @@ export function TransactionForm({
     transaction?.spent_by_member_id ?? currentUserMemberId ?? ''
   )
   const [cardId, setCardId] = useState<string>(transaction?.card_id ?? '')
+  const [scope, setScope] = useState<'personal' | 'couple' | 'family' | 'for_member'>(
+    (transaction?.scope as 'personal' | 'couple' | 'family' | 'for_member') ?? 'personal'
+  )
+  const [scopeTargetMemberId, setScopeTargetMemberId] = useState<string>(
+    transaction?.beneficiary_id ?? ''
+  )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [customCategory, setCustomCategory] = useState('')
@@ -136,6 +142,10 @@ export function TransactionForm({
       if (paidBy) payload.paid_by_member_id = paidBy
       if (spentBy) payload.spent_by_member_id = spentBy
       if (cardId) payload.card_id = cardId
+      payload.scope = scope
+      if (scope === 'for_member' && scopeTargetMemberId) {
+        payload.beneficiary_id = scopeTargetMemberId
+      }
     }
 
     let dbError
@@ -278,6 +288,47 @@ export function TransactionForm({
               required
             />
           </div>
+
+          {hasFamily && (
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium text-gray-700">Para quem é?</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: 'personal',   label: 'Só minha'    },
+                  { value: 'couple',     label: 'Casal'       },
+                  { value: 'family',     label: 'Família'     },
+                  { value: 'for_member', label: 'Para alguém' },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setScope(opt.value as typeof scope)}
+                    className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all ${
+                      scope === opt.value
+                        ? 'bg-[#7B2FBE] text-white border-[#7B2FBE]'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-[#7B2FBE]'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {(scope === 'couple' || scope === 'for_member') && (
+                <Select value={scopeTargetMemberId} onValueChange={v => setScopeTargetMemberId(v ?? '')}>
+                  <SelectTrigger className="h-10 rounded-xl border-gray-200 mt-2">
+                    <SelectValue placeholder={scope === 'couple' ? 'Dividir com...' : 'Para quem...'} />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    {familyMembers
+                      .filter(m => m.id !== currentUserMemberId)
+                      .map(m => (
+                        <SelectItem key={m.id} value={m.id}>{m.display_name}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          )}
 
           {/* Family fields */}
           {hasFamily && (
