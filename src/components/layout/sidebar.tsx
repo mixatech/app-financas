@@ -45,7 +45,7 @@ export function Sidebar({ email, planBadge, mobileOpen, onMobileClose }: Sidebar
       {/* Logo */}
       <div className="flex items-center justify-between px-6 pt-8 pb-6">
         <Link href="/dashboard">
-          <Image src="/logo-escrita-branco.png" alt="Finxa" height={28} width={90} />
+          <Image src="/logo-escrita-branco.png" alt="Finxa" height={28} width={90} unoptimized />
         </Link>
         <button
           onClick={onMobileClose}

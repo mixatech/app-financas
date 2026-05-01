@@ -35,7 +35,7 @@ export function Navbar({ email, planBadge }: { email: string; planBadge?: React.
 
           {/* Logo */}
           <Link href="/dashboard">
-            <Image src="/logo-escrita-branco.png" alt="Finxa" height={24} width={80} />
+            <Image src="/logo-escrita-branco.png" alt="Finxa" height={24} width={80} unoptimized />
           </Link>
 
           {/* Nav links */}

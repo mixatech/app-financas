@@ -62,7 +62,7 @@ export function OnboardingFlow({ userEmail }: OnboardingFlowProps) {
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="flex justify-center mb-10">
-          <Image src="/logo-escrita-branco.png" alt="Finxa" height={28} width={90} />
+          <Image src="/logo-escrita-branco.png" alt="Finxa" unoptimized height={28} width={90} />
         </div>
 
         {step === 'choose' && (

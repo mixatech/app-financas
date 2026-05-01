@@ -81,7 +81,7 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen bg-white flex">
       <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-12" style={{ background: 'linear-gradient(135deg, #18181b 0%, #3b0764 100%)' }}>
         <div>
-          <Image src="/logo-escrita-branco.png" alt="Finxa" height={28} width={90} />
+          <Image src="/logo-escrita-branco.png" alt="Finxa" unoptimized height={28} width={90} />
         </div>
         <div className="space-y-4">
           <p className="text-white text-3xl font-bold leading-snug">
@@ -97,7 +97,7 @@ export default function ForgotPasswordPage() {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="mb-10 lg:hidden">
-            <Image src="/logo-escrita-branco.png" alt="Finxa" height={24} width={80} />
+            <Image src="/logo-escrita-branco.png" alt="Finxa" unoptimized height={24} width={80} />
           </div>
 
           <h1 className="text-3xl font-bold text-gray-900 mb-1">Esqueceu a senha?</h1>
