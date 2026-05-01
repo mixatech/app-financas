@@ -26,7 +26,7 @@ export function MemberBarChart({ transactions, members }: MemberBarChartProps) {
   if (data.length === 0) return null
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6">
+    <div className="bg-white rounded-2xl p-6" style={{ boxShadow: '0 3.5px 5.5px 0 rgba(0,0,0,0.06)' }}>
       <h3 className="text-sm font-semibold text-gray-700 mb-4">Comparativo de gastos</h3>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={data} barSize={40} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>

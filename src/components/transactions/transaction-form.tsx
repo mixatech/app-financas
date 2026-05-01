@@ -35,6 +35,7 @@ interface TransactionFormProps {
   familyMembers?: FamilyMember[]
   cards?: Card[]
   currentUserMemberId?: string
+  familyId?: string
 }
 
 const defaultForm: TransactionFormData = {
@@ -51,6 +52,7 @@ export function TransactionForm({
   familyMembers = [],
   cards = [],
   currentUserMemberId,
+  familyId,
 }: TransactionFormProps) {
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<TransactionFormData>(
@@ -63,12 +65,6 @@ export function TransactionForm({
           date: transaction.date,
         }
       : defaultForm
-  )
-  const [paidBy, setPaidBy] = useState<string>(
-    transaction?.paid_by_member_id ?? currentUserMemberId ?? ''
-  )
-  const [spentBy, setSpentBy] = useState<string>(
-    transaction?.spent_by_member_id ?? currentUserMemberId ?? ''
   )
   const [cardId, setCardId] = useState<string>(transaction?.card_id ?? '')
   const [scope, setScope] = useState<'personal' | 'couple' | 'family' | 'for_member'>(
@@ -139,7 +135,11 @@ export function TransactionForm({
     }
 
     if (hasFamily) {
-      if (paidBy) payload.paid_by_member_id = paidBy
+      if (familyId) payload.family_id = familyId
+      if (currentUserMemberId) payload.paid_by_member_id = currentUserMemberId
+      const spentBy = scope === 'for_member' && scopeTargetMemberId
+        ? scopeTargetMemberId
+        : currentUserMemberId
       if (spentBy) payload.spent_by_member_id = spentBy
       if (cardId) payload.card_id = cardId
       payload.scope = scope
@@ -148,15 +148,24 @@ export function TransactionForm({
       }
     }
 
-    let dbError
-    if (transaction) {
-      ;({ error: dbError } = await supabase.from('transactions').update(payload).eq('id', transaction.id))
-    } else {
-      ;({ error: dbError } = await supabase.from('transactions').insert(payload))
+    let result = transaction
+      ? await supabase.from('transactions').update(payload).eq('id', transaction.id)
+      : await supabase.from('transactions').insert(payload)
+
+    // Fallback: se coluna scope/beneficiary_id ainda não existe no banco, tenta sem elas
+    if (result.error?.message?.includes('beneficiary_id') || result.error?.message?.includes("'scope'")) {
+      const safePayload = { ...payload }
+      delete safePayload.scope
+      delete safePayload.beneficiary_id
+      result = transaction
+        ? await supabase.from('transactions').update(safePayload).eq('id', transaction.id)
+        : await supabase.from('transactions').insert(safePayload)
     }
 
-    if (dbError) {
-      setError('Erro ao salvar transação. Tente novamente.')
+    if (result.error) {
+      const e = result.error
+      console.error('Transaction error — code:', e.code, '| message:', e.message, '| details:', e.details)
+      setError(e.message || 'Erro ao salvar transação. Tente novamente.')
       setLoading(false)
       return
     }
@@ -188,13 +197,13 @@ export function TransactionForm({
           )
         }
       />
-      <DialogContent className="sm:max-w-md rounded-2xl">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md rounded-2xl max-h-[90dvh] flex flex-col overflow-hidden">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-lg font-bold text-gray-900">
             {transaction ? 'Editar transação' : 'Nova transação'}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-1">
+        <form onSubmit={handleSubmit} className="space-y-4 mt-1 overflow-y-auto flex-1 pb-1">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
               {error}
@@ -253,7 +262,11 @@ export function TransactionForm({
               onValueChange={handleCategoryChange}
             >
               <SelectTrigger className="h-11 rounded-xl border-gray-200">
-                <SelectValue />
+                <SelectValue>
+                  {isCustom
+                    ? (customCategory || '+ Personalizada...')
+                    : (categories.find(c => c.value === form.category)?.label ?? form.category)}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="rounded-xl">
                 {categories.map((c) => (
@@ -316,7 +329,10 @@ export function TransactionForm({
               {(scope === 'couple' || scope === 'for_member') && (
                 <Select value={scopeTargetMemberId} onValueChange={v => setScopeTargetMemberId(v ?? '')}>
                   <SelectTrigger className="h-10 rounded-xl border-gray-200 mt-2">
-                    <SelectValue placeholder={scope === 'couple' ? 'Dividir com...' : 'Para quem...'} />
+                    <SelectValue>
+                      {familyMembers.find(m => m.id === scopeTargetMemberId)?.display_name
+                        ?? (scope === 'couple' ? 'Dividir com...' : 'Para quem...')}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
                     {familyMembers
@@ -333,43 +349,18 @@ export function TransactionForm({
           {/* Family fields */}
           {hasFamily && (
             <>
-              {form.type === 'expense' && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-sm font-medium text-gray-700">Pago por</Label>
-                    <Select value={paidBy} onValueChange={(v) => setPaidBy(v ?? '')}>
-                      <SelectTrigger className="h-11 rounded-xl border-gray-200">
-                        <SelectValue placeholder="Quem pagou?" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        {familyMembers.map((m) => (
-                          <SelectItem key={m.id} value={m.id}>{m.display_name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-sm font-medium text-gray-700">Gasto de</Label>
-                    <Select value={spentBy} onValueChange={(v) => setSpentBy(v ?? '')}>
-                      <SelectTrigger className="h-11 rounded-xl border-gray-200">
-                        <SelectValue placeholder="Para quem?" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        {familyMembers.map((m) => (
-                          <SelectItem key={m.id} value={m.id}>{m.display_name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-
-              {cards.length > 0 && (
+              {cards.length > 0 && form.type === 'expense' && (
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium text-gray-700">Cartão (opcional)</Label>
                   <Select value={cardId} onValueChange={(v) => setCardId(v ?? '')}>
                     <SelectTrigger className="h-11 rounded-xl border-gray-200">
-                      <SelectValue placeholder="Selecionar cartão..." />
+                      <SelectValue>
+                        {(() => {
+                          if (!cardId) return 'Selecionar cartão...'
+                          const c = cards.find(x => x.id === cardId)
+                          return c ? `${c.name}${c.last_digits ? ` ···${c.last_digits}` : ''}` : 'Selecionar cartão...'
+                        })()}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
                       <SelectItem value="">Nenhum</SelectItem>

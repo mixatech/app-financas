@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { TrendingUp, Users, Link2, User } from 'lucide-react'
+import Image from 'next/image'
+import { Users, Link2, User } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createFamilyGroup } from './actions'
@@ -60,11 +61,8 @@ export function OnboardingFlow({ userEmail }: OnboardingFlowProps) {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
       <div className="w-full max-w-lg">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2.5 mb-10">
-          <div className="text-white p-2 rounded-xl" style={{ background: 'var(--brand-gradient)' }}>
-            <TrendingUp className="h-5 w-5" />
-          </div>
-          <span className="font-bold text-gray-900 text-xl">Finxa</span>
+        <div className="flex justify-center mb-10">
+          <Image src="/logo-escrita-branco.png" alt="Finxa" height={28} width={90} />
         </div>
 
         {step === 'choose' && (

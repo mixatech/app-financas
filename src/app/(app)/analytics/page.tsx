@@ -4,13 +4,13 @@ import { redirect } from 'next/navigation'
 import { AnalyticsClient } from '@/components/analytics/analytics-client'
 import { generateInsights } from '@/lib/insights'
 import { Transaction, FamilyMember, getCategoryLabel, CATEGORY_COLORS } from '@/types'
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns'
+import { format, subMonths, addMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 export default async function AnalyticsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ months?: string; view?: string }>
+  searchParams: Promise<{ months?: string; view?: string; mode?: string }>
 }) {
   const params   = await searchParams
   const supabase = await createClient()
@@ -18,7 +18,8 @@ export default async function AnalyticsPage({
   if (!user) redirect('/auth/login')
   const db = createAdminClient()
 
-  const rangeMonths = parseInt(params.months ?? '3')
+  const mode        = params.mode ?? null
+  const rangeMonths = mode ? 1 : parseInt(params.months ?? '3')
   const view        = params.view ?? 'personal'
 
   const { data: myMember } = await db
@@ -26,8 +27,22 @@ export default async function AnalyticsPage({
 
   const familyId = myMember?.family_id ?? null
   const now      = new Date()
-  const start    = startOfMonth(subMonths(now, rangeMonths - 1))
-  const end      = endOfMonth(now)
+
+  let start: Date, end: Date, periodLabel: string
+  if (mode === 'current') {
+    start = startOfMonth(now)
+    end   = endOfMonth(now)
+    periodLabel = 'Mês atual'
+  } else if (mode === 'previous') {
+    start = startOfMonth(subMonths(now, 1))
+    end   = endOfMonth(subMonths(now, 1))
+    periodLabel = 'Mês anterior'
+  } else {
+    start = startOfMonth(subMonths(now, rangeMonths - 1))
+    end   = endOfMonth(now)
+    periodLabel = `Últimos ${rangeMonths} meses`
+  }
+
   const prevStart = startOfMonth(subMonths(start, 1))
   const prevEnd   = endOfMonth(subMonths(start, 1))
   const d = (date: Date) => date.toISOString().split('T')[0]
@@ -47,9 +62,11 @@ export default async function AnalyticsPage({
 
   // Dados mensais
   const monthlyMap: Record<string, { income: number; expense: number }> = {}
-  for (let i = rangeMonths - 1; i >= 0; i--) {
-    const key = format(subMonths(now, i), 'MMM/yy', { locale: ptBR })
+  let cursor = startOfMonth(start)
+  while (cursor <= end) {
+    const key = format(cursor, 'MMM/yy', { locale: ptBR })
     monthlyMap[key] = { income: 0, expense: 0 }
+    cursor = addMonths(cursor, 1)
   }
   for (const t of transactions) {
     const key = format(new Date(t.date + 'T12:00:00'), 'MMM/yy', { locale: ptBR })
@@ -86,22 +103,28 @@ export default async function AnalyticsPage({
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#7B2FBE' }}>Análises</p>
           <h1 className="text-3xl font-bold text-gray-900">Visão financeira</h1>
-          <p className="text-gray-400 text-sm mt-1">Últimos {rangeMonths} meses</p>
+          <p className="text-gray-400 text-sm mt-1">{periodLabel}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {[3,6,12].map(m => (
-            <a key={m} href={`/analytics?months=${m}&view=${view}`}
+          {([
+            { label: 'Mês atual',    href: `/analytics?mode=current&view=${view}`,   active: mode === 'current'  },
+            { label: 'Mês anterior', href: `/analytics?mode=previous&view=${view}`,  active: mode === 'previous' },
+            { label: '3m',  href: `/analytics?months=3&view=${view}`,  active: !mode && rangeMonths === 3  },
+            { label: '6m',  href: `/analytics?months=6&view=${view}`,  active: !mode && rangeMonths === 6  },
+            { label: '12m', href: `/analytics?months=12&view=${view}`, active: !mode && rangeMonths === 12 },
+          ] as const).map(btn => (
+            <a key={btn.label} href={btn.href}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                rangeMonths === m ? 'bg-[#7B2FBE] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-[#7B2FBE]'
-              }`}>{m}m</a>
+                btn.active ? 'bg-[#7B2FBE] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-[#7B2FBE]'
+              }`}>{btn.label}</a>
           ))}
           {familyId && (
             <>
-              <a href={`/analytics?months=${rangeMonths}&view=personal`}
+              <a href={`/analytics?${mode ? `mode=${mode}` : `months=${rangeMonths}`}&view=personal`}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${view === 'personal' ? 'bg-[#7B2FBE] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-[#7B2FBE]'}`}>
                 Pessoal
               </a>
-              <a href={`/analytics?months=${rangeMonths}&view=family`}
+              <a href={`/analytics?${mode ? `mode=${mode}` : `months=${rangeMonths}`}&view=family`}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${view === 'family' ? 'bg-[#7B2FBE] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-[#7B2FBE]'}`}>
                 Família
               </a>

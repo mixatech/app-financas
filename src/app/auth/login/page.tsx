@@ -6,9 +6,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import Image from 'next/image'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { TrendingUp } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -39,15 +39,12 @@ export default function LoginPage() {
     <div className="min-h-screen bg-white flex">
       {/* Left panel */}
       <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-12" style={{ background: 'linear-gradient(135deg, #18181b 0%, #3b0764 100%)' }}>
-        <div className="flex items-center gap-2.5">
-          <div className="text-white p-2 rounded-xl" style={{ background: 'var(--brand-gradient)' }}>
-            <TrendingUp className="h-5 w-5" />
-          </div>
-          <span className="text-white font-bold text-xl tracking-tight">Finxa</span>
+        <div>
+          <Image src="/logo-escrita-branco.png" alt="Finxa" height={28} width={90} />
         </div>
         <div className="space-y-4">
           <p className="text-white text-3xl font-bold leading-snug">
-            Controle financeiro inteligente para toda a família.
+            Controle financeiro inteligente para você e para toda família.
           </p>
           <p className="text-gray-400 text-base leading-relaxed">
             Gerencie receitas, despesas e o orçamento da família em um só lugar — com IA que entende sua linguagem.
@@ -59,11 +56,8 @@ export default function LoginPage() {
       {/* Right panel */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <div className="flex items-center gap-2 mb-10 lg:hidden">
-            <div className="text-white p-1.5 rounded-lg" style={{ background: 'var(--brand-gradient)' }}>
-              <TrendingUp className="h-4 w-4" />
-            </div>
-            <span className="font-bold text-gray-900 text-lg">Finxa</span>
+          <div className="mb-10 lg:hidden">
+            <Image src="/logo-escrita-branco.png" alt="Finxa" height={24} width={80} />
           </div>
 
           <h1 className="text-3xl font-bold text-gray-900 mb-1">Entrar</h1>

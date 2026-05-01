@@ -1,9 +1,10 @@
 'use client'
 
+import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { TrendingUp, LayoutDashboard, List, Users, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, List, Users, BarChart2, Settings, LogOut, Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -20,9 +21,11 @@ export function Navbar({ email, planBadge }: { email: string; planBadge?: React.
   }
 
   const links = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/transactions', label: 'Transações', icon: List },
-    { href: '/family', label: 'Família', icon: Users },
+    { href: '/dashboard',    label: 'Dashboard',   icon: LayoutDashboard },
+    { href: '/transactions', label: 'Transações',  icon: List },
+    { href: '/family',       label: 'Família',     icon: Users },
+    { href: '/analytics',    label: 'Análises',    icon: BarChart2 },
+    { href: '/settings',     label: 'Configurações', icon: Settings },
   ]
 
   return (
@@ -31,11 +34,8 @@ export function Navbar({ email, planBadge }: { email: string; planBadge?: React.
         <div className="flex h-16 items-center justify-between">
 
           {/* Logo */}
-          <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="text-white p-1.5 rounded-lg" style={{ background: 'var(--brand-gradient)' }}>
-              <TrendingUp className="h-4 w-4" />
-            </div>
-            <span className="font-bold text-gray-900 text-lg tracking-tight">Finxa</span>
+          <Link href="/dashboard">
+            <Image src="/logo-escrita-branco.png" alt="Finxa" height={24} width={80} />
           </Link>
 
           {/* Nav links */}

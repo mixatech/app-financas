@@ -3,8 +3,6 @@ import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 import { checkAiFeature } from '@/lib/plan-gate'
 
-const client = new Anthropic()
-
 const SYSTEM_PROMPT = `Você é um assistente de finanças pessoais. Extraia os dados da transação do texto do usuário e retorne APENAS JSON válido, sem markdown, sem texto adicional.
 
 Campos obrigatórios:
@@ -19,20 +17,32 @@ Categorias disponíveis:
 - Para receitas: salary (salário), freelance, investment (investimento), other_income (outros)
 - Para despesas: food (alimentação), transport (transporte), housing (moradia), health (saúde), education (educação), entertainment (lazer), clothing (vestuário), other_expense (outros)
 
-Exemplos de mapeamento:
-- mercado/supermercado → food
-- uber/taxi/combustível/ônibus → transport
-- aluguel/condomínio → housing
-- farmácia/médico/plano → health
-- curso/escola → education
-- cinema/streaming/bar/restaurante → entertainment
-- roupa/sapato → clothing
-- salário/pagamento → salary (income)
+Exemplos de mapeamento (seja conservador, prefira food para qualquer menção a comida):
+- comida/alimento/refeição/almoço/jantar/café/lanche/marmita → food
+- mercado/supermercado/feira/hortifruti/açougue → food
+- ifood/rappi/delivery de comida → food
+- uber/taxi/ônibus/metrô/combustível/gasolina/estacionamento → transport
+- aluguel/condomínio/iptu/energia/água/internet → housing
+- farmácia/médico/dentista/plano de saúde/hospital/consulta → health
+- curso/escola/faculdade/livro/material escolar → education
+- cinema/teatro/show/streaming/netflix/spotify → entertainment
+- bar/balada/festa → entertainment
+- roupa/sapato/vestuário/calçado/acessório/moda → clothing
+- salário/pagamento/contracheque → salary (income)
+- freela/freelance/serviço prestado → freelance (income)
+- dividendo/rendimento/aplicação → investment (income)
 
 Retorne exatamente este JSON (sem campos extras):
 {"type":"expense","amount":50,"description":"Supermercado","category":"food","date":"2025-01-15","confidence":0.95}`
 
 export async function POST(req: NextRequest) {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return NextResponse.json(
+      { error: 'Chat IA não configurado. Adicione ANTHROPIC_API_KEY no .env.local.' },
+      { status: 503 }
+    )
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
@@ -46,18 +56,13 @@ export async function POST(req: NextRequest) {
   if (!text?.trim()) return NextResponse.json({ error: 'Texto obrigatório' }, { status: 400 })
 
   const today = new Date().toISOString().split('T')[0]
+  const client = new Anthropic({ timeout: 20_000 })
 
   try {
     const message = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 256,
-      system: [
-        {
-          type: 'text',
-          text: SYSTEM_PROMPT,
-          cache_control: { type: 'ephemeral' },
-        },
-      ],
+      system: SYSTEM_PROMPT,
       messages: [
         {
           role: 'user',
@@ -69,9 +74,19 @@ export async function POST(req: NextRequest) {
     const content = message.content[0]
     if (content.type !== 'text') throw new Error('Resposta inválida')
 
-    const parsed = JSON.parse(content.text)
+    const raw = content.text
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```\s*$/, '')
+      .trim()
+    const parsed = JSON.parse(raw)
     return NextResponse.json({ transaction: parsed })
-  } catch {
-    return NextResponse.json({ error: 'Não foi possível interpretar a transação.' }, { status: 422 })
+  } catch (err: unknown) {
+    const status = (err as { status?: number }).status
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('Anthropic error — status:', status, '| message:', msg)
+    if (msg.includes('timeout') || msg.includes('timed out')) {
+      return NextResponse.json({ error: 'A IA demorou demais para responder. Tente novamente.' }, { status: 504 })
+    }
+    return NextResponse.json({ error: `Erro IA: ${msg}` }, { status: 422 })
   }
 }

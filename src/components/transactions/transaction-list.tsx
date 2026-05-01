@@ -11,6 +11,7 @@ interface TransactionListProps {
   familyMembers?: FamilyMember[]
   cards?: Card[]
   currentUserMemberId?: string
+  familyId?: string
 }
 
 function fmt(value: number) {
@@ -22,10 +23,11 @@ export function TransactionList({
   familyMembers = [],
   cards = [],
   currentUserMemberId,
+  familyId,
 }: TransactionListProps) {
   if (transactions.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
+      <div className="bg-white rounded-2xl p-16 text-center" style={{ boxShadow: '0 2px 16px rgba(123,47,190,0.07)' }}>
         <p className="text-gray-800 font-semibold text-lg">Nenhuma transação encontrada</p>
         <p className="text-gray-400 text-sm mt-1">
           Ajuste os filtros ou adicione sua primeira transação
@@ -38,7 +40,7 @@ export function TransactionList({
   const cardMap = Object.fromEntries(cards.map((c) => [c.id, c]))
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 2px 16px rgba(123,47,190,0.07)' }}>
       {transactions.map((t, i) => {
         const paidByMember = t.paid_by_member_id ? memberMap[t.paid_by_member_id] : null
         const card = t.card_id ? cardMap[t.card_id] : null
@@ -93,6 +95,7 @@ export function TransactionList({
                 familyMembers={familyMembers}
                 cards={cards}
                 currentUserMemberId={currentUserMemberId}
+                familyId={familyId}
               />
               <DeleteButton id={t.id} />
             </div>

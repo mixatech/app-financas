@@ -73,27 +73,20 @@ export default async function TransactionsPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#7B2FBE' }}>
-            Histórico
-          </p>
-          <h1 className="text-3xl font-bold text-gray-900">Transações</h1>
-          <p className="text-gray-400 text-sm mt-1">
+          <h2 className="text-xl font-bold text-gray-900">Transações</h2>
+          <p className="text-sm text-gray-400 mt-0.5">
             {transactions.length} transaç{transactions.length !== 1 ? 'ões' : 'ão'} encontrada{transactions.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
           <StatementImport cards={cards} userId={user!.id} familyId={familyId} />
-          <TransactionForm
-            familyMembers={familyMembers}
-            cards={cards}
-            currentUserMemberId={currentUserMemberId}
-          />
+          <TransactionForm familyMembers={familyMembers} cards={cards} currentUserMemberId={currentUserMemberId} familyId={familyId ?? undefined} />
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 px-6 py-4">
+      <div className="bg-white rounded-2xl px-6 py-4" style={{ boxShadow: '0 2px 16px rgba(123,47,190,0.07)' }}>
         <Suspense>
           <TransactionFilters />
         </Suspense>
@@ -101,19 +94,17 @@ export default async function TransactionsPage({
 
       {transactions.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl border border-gray-100 px-5 py-3 flex flex-col">
-            <span className="text-xs text-gray-400 mb-1">Receitas</span>
-            <span className="text-base font-bold truncate" style={{ color: '#7B2FBE' }}>{fmt(totalIncome)}</span>
+          <div className="bg-white rounded-xl px-5 py-4 flex flex-col" style={{ boxShadow: '0 2px 16px rgba(123,47,190,0.07)' }}>
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Receitas</span>
+            <span className="text-lg font-bold" style={{ color: '#7B2FBE' }}>{fmt(totalIncome)}</span>
           </div>
-          <div className="bg-white rounded-xl border border-gray-100 px-5 py-3 flex flex-col">
-            <span className="text-xs text-gray-400 mb-1">Despesas</span>
-            <span className="text-base font-bold text-gray-800 truncate">{fmt(totalExpense)}</span>
+          <div className="bg-white rounded-xl px-5 py-4 flex flex-col" style={{ boxShadow: '0 2px 16px rgba(123,47,190,0.07)' }}>
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Despesas</span>
+            <span className="text-lg font-bold text-gray-800">{fmt(totalExpense)}</span>
           </div>
-          <div className={`rounded-xl border px-5 py-3 flex flex-col ${balance >= 0 ? 'bg-purple-50 border-purple-100' : 'bg-red-50 border-red-100'}`}>
-            <span className="text-xs text-gray-400 mb-1">Saldo</span>
-            <span className="text-base font-bold truncate" style={{ color: balance >= 0 ? '#7B2FBE' : '#ef4444' }}>
-              {fmt(balance)}
-            </span>
+          <div className="bg-white rounded-xl px-5 py-4 flex flex-col" style={{ boxShadow: '0 2px 16px rgba(123,47,190,0.07)' }}>
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Saldo</span>
+            <span className="text-lg font-bold" style={{ color: balance >= 0 ? '#7B2FBE' : '#374151' }}>{fmt(balance)}</span>
           </div>
         </div>
       )}
@@ -123,6 +114,7 @@ export default async function TransactionsPage({
         familyMembers={familyMembers}
         cards={cards}
         currentUserMemberId={currentUserMemberId}
+        familyId={familyId ?? undefined}
       />
       <ChatFab />
     </div>

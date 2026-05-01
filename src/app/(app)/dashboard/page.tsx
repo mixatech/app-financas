@@ -1,17 +1,19 @@
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-// SummaryCards replaced by inline Fintech Bold header
 import { ExpenseChart } from '@/components/dashboard/expense-chart'
 import { RecentTransactions } from '@/components/dashboard/recent-transactions'
 import { MemberBreakdown } from '@/components/dashboard/member-breakdown'
 import { MemberBarChart } from '@/components/dashboard/member-bar-chart'
+import { SpendingTrend } from '@/components/dashboard/spending-trend'
 import { FamilyToggle } from '@/components/dashboard/family-toggle'
+import { MonthPicker } from '@/components/dashboard/month-picker'
 import { TransactionForm } from '@/components/transactions/transaction-form'
 import { ChatFab } from '@/components/chat/chat-fab'
 import { Transaction, FamilyMember, Card } from '@/types'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { TrendingUp, TrendingDown, Wallet, CreditCard } from 'lucide-react'
 
 export default async function DashboardPage({
   searchParams,
@@ -84,67 +86,96 @@ export default async function DashboardPage({
 
   const hasFamily = familyMembers.length > 0
 
+  const balancePositive = balance >= 0
+  const expensePct = totalIncome > 0 ? ((totalExpense / totalIncome) * 100).toFixed(0) : null
+
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div className="space-y-6">
+      {/* Cabeçalho minimalista */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#7B2FBE' }}>
-            Dashboard
-          </p>
-          <h1 className="text-3xl font-bold text-gray-900 capitalize">{monthLabel}</h1>
-          <p className="text-gray-400 text-sm mt-1">Resumo financeiro do período</p>
+          <h2 className="text-xl font-bold text-gray-900 capitalize">{monthLabel}</h2>
+          <p className="text-sm text-gray-400 mt-0.5">Resumo financeiro do período</p>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
           {hasFamily && (
             <Suspense>
               <FamilyToggle />
             </Suspense>
           )}
-          <input
-            type="month"
-            defaultValue={month}
-            className="border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-[#7B2FBE] focus:border-transparent"
-          />
+          <Suspense>
+            <MonthPicker value={month} />
+          </Suspense>
           <TransactionForm
             familyMembers={familyMembers}
             cards={cards}
             currentUserMemberId={currentUserMemberId}
+            familyId={familyId ?? undefined}
           />
         </div>
       </div>
 
-      {/* Fintech Bold header */}
-      <div
-        className="rounded-2xl p-6 mb-6"
-        style={{ background: 'linear-gradient(135deg, #18181b, #3b0764)' }}
-      >
-        <p className="text-xs font-medium text-zinc-400 mb-4">
-          Resumo do mês
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="rounded-xl bg-white/10 border border-white/10 p-4">
-            <div className="text-xs text-violet-300 mb-1">Receitas</div>
-            <div className="text-base sm:text-xl font-bold text-white truncate">{fmt(totalIncome)}</div>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        {/* Receitas */}
+        <div className="bg-white rounded-2xl p-5" style={{ boxShadow: '0 2px 16px rgba(123,47,190,0.07)' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(123,47,190,0.10)' }}>
+              <TrendingUp className="h-4 w-4" style={{ color: '#7B2FBE' }} />
+            </span>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Receitas</p>
           </div>
-          <div className="rounded-xl bg-white/10 border border-white/10 p-4">
-            <div className="text-xs text-pink-300 mb-1">Despesas</div>
-            <div className="text-base sm:text-xl font-bold text-white truncate">{fmt(totalExpense)}</div>
+          <p className="text-2xl font-bold text-gray-900 mb-1">{fmt(totalIncome)}</p>
+          <p className="text-xs text-gray-400">Entradas do período</p>
+        </div>
+
+        {/* Despesas */}
+        <div className="bg-white rounded-2xl p-5" style={{ boxShadow: '0 2px 16px rgba(123,47,190,0.07)' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(123,47,190,0.10)' }}>
+              <CreditCard className="h-4 w-4" style={{ color: '#7B2FBE' }} />
+            </span>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Despesas</p>
           </div>
-          <div
-            className="rounded-xl border p-4"
-            style={{ background: 'rgba(16,185,129,0.2)', borderColor: 'rgba(16,185,129,0.3)' }}
+          <p className="text-2xl font-bold text-gray-900 mb-1">{fmt(totalExpense)}</p>
+          <p className="text-xs text-gray-400">
+            {expensePct ? `${expensePct}% da receita` : 'Saídas do período'}
+          </p>
+        </div>
+
+        {/* Saldo — card destaque com fundo violeta */}
+        <div className="rounded-2xl p-5" style={{ background: 'linear-gradient(135deg, #7B2FBE 0%, #9333ea 100%)', boxShadow: '0 8px 24px rgba(123,47,190,0.30)' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.15)' }}>
+              <Wallet className="h-4 w-4 text-white" />
+            </span>
+            <p className="text-xs font-semibold text-white/60 uppercase tracking-wider">Saldo</p>
+          </div>
+          <p className="text-2xl font-bold text-white mb-1">{fmt(balance)}</p>
+          <span
+            className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
+            style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}
           >
-            <div className="text-xs text-emerald-300 mb-1">Saldo</div>
-            <div className="text-base sm:text-xl font-bold text-emerald-300 truncate">{fmt(balance)}</div>
-          </div>
+            {balancePositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+            {balancePositive ? 'Resultado positivo' : 'Resultado negativo'}
+          </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <ExpenseChart transactions={transactions} />
-        <RecentTransactions transactions={transactions} />
+      {/* Gráficos */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div className="lg:col-span-3">
+          <SpendingTrend transactions={transactions} month={month} />
+        </div>
+        <div className="lg:col-span-2">
+          <ExpenseChart transactions={transactions} />
+        </div>
       </div>
 
+      {/* Transações recentes */}
+      <RecentTransactions transactions={transactions} />
+
+      {/* Família */}
       {view === 'family' && hasFamily && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <MemberBreakdown transactions={transactions} members={familyMembers} />

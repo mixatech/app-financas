@@ -24,7 +24,7 @@ export function MemberBreakdown({ transactions, members }: MemberBreakdownProps)
   if (memberStats.every((s) => s.amount === 0)) return null
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6">
+    <div className="bg-white rounded-2xl p-6" style={{ boxShadow: '0 3.5px 5.5px 0 rgba(0,0,0,0.06)' }}>
       <h3 className="text-sm font-semibold text-gray-700 mb-4">Gastos por membro</h3>
       <div className="space-y-4">
         {memberStats.map(({ member, amount, pct }) => (

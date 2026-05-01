@@ -1,15 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Send, Bot, CheckCircle2, X } from 'lucide-react'
+import { Send, Bot, CheckCircle2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import { INCOME_CATEGORIES, EXPENSE_CATEGORIES, Category } from '@/types'
+import { INCOME_CATEGORIES, EXPENSE_CATEGORIES, Category, FamilyMember } from '@/types'
 import { UpgradeModal } from '@/components/billing/upgrade-modal'
 
 interface ParsedTransaction {
@@ -25,6 +25,8 @@ interface TransactionChatProps {
   onClose: () => void
 }
 
+type Scope = 'personal' | 'couple' | 'family' | 'for_member'
+
 export function TransactionChat({ onClose }: TransactionChatProps) {
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
@@ -35,8 +37,33 @@ export function TransactionChat({ onClose }: TransactionChatProps) {
   const [saved, setSaved] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [upgradeReason, setUpgradeReason] = useState<'upgrade_required' | 'limit_reached'>('upgrade_required')
+
+  const [familyId, setFamilyId] = useState<string | null>(null)
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([])
+  const [currentUserMemberId, setCurrentUserMemberId] = useState<string | null>(null)
+  const [scope, setScope] = useState<Scope>('personal')
+  const [scopeTargetMemberId, setScopeTargetMemberId] = useState<string>('')
+
   const router = useRouter()
   const supabase = createClient()
+
+  useEffect(() => {
+    async function loadFamily() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: member } = await supabase
+        .from('family_members').select('id, family_id').eq('user_id', user.id).maybeSingle()
+      if (!member?.family_id) return
+      setFamilyId(member.family_id)
+      setCurrentUserMemberId(member.id)
+      const { data: members } = await supabase
+        .from('family_members').select('*').eq('family_id', member.family_id)
+      setFamilyMembers((members ?? []) as FamilyMember[])
+    }
+    loadFamily()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const hasFamily = familyMembers.length > 0
 
   async function handleParse() {
     if (!text.trim()) return
@@ -61,6 +88,12 @@ export function TransactionChat({ onClose }: TransactionChatProps) {
 
     const json = await res.json()
 
+    if (res.status === 503) {
+      setError('Chat IA não está configurado. Adicione ANTHROPIC_API_KEY no .env.local.')
+      setLoading(false)
+      return
+    }
+
     if (!res.ok) {
       setError(json.error ?? 'Erro ao interpretar.')
       setLoading(false)
@@ -80,7 +113,7 @@ export function TransactionChat({ onClose }: TransactionChatProps) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setError('Não autenticado.'); setSaving(false); return }
 
-    const { error } = await supabase.from('transactions').insert({
+    const payload: Record<string, unknown> = {
       user_id: user.id,
       type: edited.type,
       amount: edited.amount,
@@ -88,9 +121,23 @@ export function TransactionChat({ onClose }: TransactionChatProps) {
       category: edited.category,
       date: edited.date,
       source: 'chat_ai',
-    })
+    }
 
-    if (error) { setError('Erro ao salvar.'); setSaving(false); return }
+    if (hasFamily && familyId) {
+      payload.family_id = familyId
+      payload.scope = scope
+      if (currentUserMemberId) payload.paid_by_member_id = currentUserMemberId
+      const spentBy = scope === 'for_member' && scopeTargetMemberId
+        ? scopeTargetMemberId
+        : currentUserMemberId
+      if (spentBy) payload.spent_by_member_id = spentBy
+      if (scope === 'for_member' && scopeTargetMemberId) {
+        payload.beneficiary_id = scopeTargetMemberId
+      }
+    }
+
+    const result = await supabase.from('transactions').insert(payload)
+    if (result.error) { setError('Erro ao salvar.'); setSaving(false); return }
 
     setSaved(true)
     router.refresh()
@@ -101,20 +148,20 @@ export function TransactionChat({ onClose }: TransactionChatProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg" style={{ background: 'var(--brand-gradient)' }}>
-            <Bot className="h-4 w-4 text-white" />
-          </div>
-          <span className="font-semibold text-gray-800 text-sm">Registrar com IA</span>
+      {/* Header — sem X próprio, o DialogContent já tem */}
+      <div className="flex items-center gap-2 p-4 border-b border-gray-100">
+        <div className="p-1.5 rounded-lg" style={{ background: 'var(--brand-gradient)' }}>
+          <Bot className="h-4 w-4 text-white" />
         </div>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-          <X className="h-5 w-5" />
-        </button>
+        <span className="font-semibold text-gray-800 text-sm">Registrar com IA</span>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Erro antes de ter dados (parse falhou) */}
+        {error && !edited && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2 rounded-xl">{error}</div>
+        )}
+
         {/* Instrução */}
         {!parsed && (
           <div className="bg-purple-50 rounded-2xl p-4 text-sm text-gray-600">
@@ -191,7 +238,9 @@ export function TransactionChat({ onClose }: TransactionChatProps) {
                   onValueChange={(v) => setEdited((ed) => ed ? { ...ed, category: v as Category } : ed)}
                 >
                   <SelectTrigger className="h-9 rounded-xl border-gray-200 text-xs">
-                    <SelectValue />
+                    <SelectValue>
+                      {categories.find(c => c.value === edited.category)?.label ?? edited.category}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
                     {categories.map((c) => (
@@ -212,9 +261,53 @@ export function TransactionChat({ onClose }: TransactionChatProps) {
               </div>
             </div>
 
+            {/* Para quem é? — só aparece se o usuário tem família */}
+            {hasFamily && (
+              <div className="space-y-2">
+                <Label className="text-xs text-gray-500">Para quem é?</Label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {([
+                    { value: 'personal',   label: 'Só minha'    },
+                    { value: 'couple',     label: 'Casal'       },
+                    { value: 'family',     label: 'Família'     },
+                    { value: 'for_member', label: 'Para alguém' },
+                  ] as const).map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setScope(opt.value)}
+                      className={`py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                        scope === opt.value
+                          ? 'bg-[#7B2FBE] text-white border-[#7B2FBE]'
+                          : 'bg-white text-gray-600 border-gray-200'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                {(scope === 'couple' || scope === 'for_member') && (
+                  <Select value={scopeTargetMemberId} onValueChange={v => setScopeTargetMemberId(v ?? '')}>
+                    <SelectTrigger className="h-9 rounded-xl border-gray-200 text-xs">
+                      <SelectValue>
+                        {familyMembers.find(m => m.id === scopeTargetMemberId)?.display_name
+                          ?? (scope === 'couple' ? 'Dividir com...' : 'Para quem...')}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      {familyMembers
+                        .filter(m => m.id !== currentUserMemberId)
+                        .map(m => (
+                          <SelectItem key={m.id} value={m.id} className="text-xs">{m.display_name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
+
             <div className="flex gap-2 pt-1">
               <button
-                onClick={() => { setParsed(null); setEdited(null); setText('') }}
+                onClick={() => { setParsed(null); setEdited(null); setText(''); setScope('personal'); setScopeTargetMemberId('') }}
                 className="flex-1 h-9 rounded-xl border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50"
               >
                 Cancelar
