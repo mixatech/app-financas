@@ -59,7 +59,7 @@ export function CardsTab({ familyId, cards, members }: { familyId: string; cards
                   </p>
                 </div>
                 <button
-                  onClick={() => startTransition(() => deleteCard(c.id))}
+                  onClick={() => startTransition(() => { deleteCard(c.id); })}
                   disabled={isPending}
                   className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50"
                 >
