@@ -110,7 +110,7 @@ export function CardsTab({ familyId, cards, members }: { familyId: string; cards
           </div>
           <div className="space-y-1">
             <Label className="text-xs text-gray-600">Banco</Label>
-            <Select value={form.bank} onValueChange={v => setForm(f => ({...f, bank: v}))}>
+            <Select value={form.bank} onValueChange={(v: string) => setForm(f => ({...f, bank: v}))}>
               <SelectTrigger className="h-9 rounded-xl border-gray-200">
                 <SelectValue placeholder="Selecionar" />
               </SelectTrigger>
