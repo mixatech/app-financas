@@ -32,9 +32,7 @@ export function PermissionsTab({ members }: { members: FamilyMember[] }) {
             <select
               defaultValue={m.visibility_scope ?? 'own'}
               disabled={isPending}
-              onChange={e => startTransition(() =>
-                updateMemberVisibility(m.id, e.target.value as 'own' | 'couple' | 'family' | 'all')
-              )}
+              onChange={e => startTransition(() => { updateMemberVisibility(m.id, e.target.value as 'own' | 'couple' | 'family' | 'all'); })}
               className="text-sm border border-gray-200 rounded-xl px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-300 disabled:opacity-60"
             >
               {SCOPE_OPTIONS.map(o => (

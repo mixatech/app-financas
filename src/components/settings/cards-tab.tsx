@@ -110,7 +110,7 @@ export function CardsTab({ familyId, cards, members }: { familyId: string; cards
           </div>
           <div className="space-y-1">
             <Label className="text-xs text-gray-600">Banco</Label>
-            <Select value={form.bank} onValueChange={(v: string) => setForm(f => ({...f, bank: v}))}>
+            <Select value={form.bank} onValueChange={(v) => setForm(f => ({...f, bank: v ?? ''}))}>
               <SelectTrigger className="h-9 rounded-xl border-gray-200">
                 <SelectValue placeholder="Selecionar" />
               </SelectTrigger>
@@ -123,7 +123,7 @@ export function CardsTab({ familyId, cards, members }: { familyId: string; cards
         {members.length > 1 && (
           <div className="space-y-1">
             <Label className="text-xs text-gray-600">Dono</Label>
-            <Select value={form.member_id} onValueChange={v => setForm(f => ({...f, member_id: v}))}>
+            <Select value={form.member_id} onValueChange={(v) => setForm(f => ({...f, member_id: v ?? ''}))}>
               <SelectTrigger className="h-9 rounded-xl border-gray-200">
                 <SelectValue>{members.find(m => m.id === form.member_id)?.display_name ?? 'Selecionar'}</SelectValue>
               </SelectTrigger>

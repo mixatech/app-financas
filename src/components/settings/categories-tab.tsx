@@ -47,7 +47,7 @@ export function CategoriesTab({ familyId, customCategories }: { familyId: string
                 <span className="text-sm font-medium text-gray-800">{c.name}</span>
                 <span className="text-xs text-gray-400">{c.type === 'income' ? 'Receita' : 'Despesa'}</span>
               </div>
-              <button onClick={() => startTransition(() => deleteCustomCategory(c.id))} disabled={isPending}
+              <button onClick={() => startTransition(() => { deleteCustomCategory(c.id); })} disabled={isPending}
                 className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50">
                 <Trash2 className="h-4 w-4" />
               </button>
