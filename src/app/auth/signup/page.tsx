@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 import { Input } from '@/components/ui/input'
@@ -16,7 +17,10 @@ export default function SignupPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
+  const searchParams = useSearchParams()
   const supabase = createClient()
+
+  const redirectTo = searchParams.get('redirect') ?? '/dashboard'
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
@@ -29,11 +33,15 @@ export default function SignupPage() {
       return
     }
 
+    const callbackUrl = redirectTo !== '/dashboard'
+      ? `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirectTo)}`
+      : `${window.location.origin}/auth/callback`
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: callbackUrl,
       },
     })
 
@@ -80,7 +88,11 @@ export default function SignupPage() {
           </div>
           <p className="text-sm text-gray-400">
             Já confirmou?{' '}
-            <Link href="/auth/login" className="font-semibold" style={{ color: '#7B2FBE' }}>
+            <Link
+              href={redirectTo !== '/dashboard' ? `/auth/login?redirect=${encodeURIComponent(redirectTo)}` : '/auth/login'}
+              className="font-semibold"
+              style={{ color: '#7B2FBE' }}
+            >
               Fazer login
             </Link>
           </p>
@@ -174,7 +186,11 @@ export default function SignupPage() {
 
           <p className="text-sm text-gray-400 text-center mt-6">
             Já tem conta?{' '}
-            <Link href="/auth/login" className="font-semibold" style={{ color: '#7B2FBE' }}>
+            <Link
+              href={redirectTo !== '/dashboard' ? `/auth/login?redirect=${encodeURIComponent(redirectTo)}` : '/auth/login'}
+              className="font-semibold"
+              style={{ color: '#7B2FBE' }}
+            >
               Fazer login
             </Link>
           </p>

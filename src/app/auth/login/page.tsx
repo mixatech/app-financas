@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
@@ -16,7 +16,10 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
+
+  const redirectTo = searchParams.get('redirect') ?? '/dashboard'
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -35,7 +38,7 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/dashboard')
+    router.push(redirectTo)
     router.refresh()
   }
 
@@ -114,7 +117,11 @@ export default function LoginPage() {
 
           <p className="text-sm text-gray-400 text-center mt-6">
             Não tem conta?{' '}
-            <Link href="/auth/signup" className="font-semibold" style={{ color: '#7B2FBE' }}>
+            <Link
+              href={redirectTo !== '/dashboard' ? `/auth/signup?redirect=${encodeURIComponent(redirectTo)}` : '/auth/signup'}
+              className="font-semibold"
+              style={{ color: '#7B2FBE' }}
+            >
               Criar conta grátis
             </Link>
           </p>

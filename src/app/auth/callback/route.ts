@@ -15,5 +15,14 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/auth/reset-password`)
   }
 
-  return NextResponse.redirect(`${origin}/dashboard`)
+  // next: explicit post-auth destination (e.g. password reset)
+  const next = searchParams.get('next')
+  if (next?.startsWith('/')) {
+    return NextResponse.redirect(`${origin}${next}`)
+  }
+
+  // redirect: preserve URL for invite links and other pre-auth flows
+  const redirectTo = searchParams.get('redirect')
+  const safePath = redirectTo?.startsWith('/') ? redirectTo : '/dashboard'
+  return NextResponse.redirect(`${origin}${safePath}`)
 }

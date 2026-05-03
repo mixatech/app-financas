@@ -34,12 +34,15 @@ export async function updateSession(request: NextRequest) {
   if (!user && !pathname.startsWith('/auth')) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
+    url.searchParams.set('redirect', pathname)
     return NextResponse.redirect(url)
   }
 
   if (user && pathname.startsWith('/auth') && pathname !== '/auth/reset-password') {
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
+    const redirectTo = request.nextUrl.searchParams.get('redirect')
+    url.pathname = redirectTo?.startsWith('/') ? redirectTo : '/dashboard'
+    url.search = ''
     return NextResponse.redirect(url)
   }
 
