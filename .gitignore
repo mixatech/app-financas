@@ -1,5 +1,14 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# MCP server config (contains API tokens)
+.mcp.json
+
+# Visual brainstorming companion
+.superpowers/
+
+# Claude Code local settings (can contain API tokens/hooks)
+.claude/settings.local.json
+
 # dependencies
 /node_modules
 /.pnp
