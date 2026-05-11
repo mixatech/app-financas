@@ -7,7 +7,7 @@ import { FamilyGroup, FamilyMember, Card, Settlement, MemberSplitRatio } from '@
 import { MemberAvatar } from '@/components/family/member-avatar'
 import { BalancesTab } from '@/components/family/balances-tab'
 import { MemberBalance } from '@/lib/balances'
-import { Users, Plus, Copy, Check, Crown, Trash2 } from 'lucide-react'
+import { Users, Plus, Copy, Check, Crown, Trash2, Pencil, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface FamilyClientProps {
@@ -29,6 +29,9 @@ export function FamilyClient({ group, members: initialMembers, currentUserId, cu
   const [inviteUrl, setInviteUrl] = useState('')
   const [copied, setCopied] = useState(false)
   const [generatingInvite, setGeneratingInvite] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState('')
+  const [savingId, setSavingId] = useState<string | null>(null)
   const supabase = createClient()
   const isAdmin = currentMember.role === 'admin'
 
@@ -51,6 +54,31 @@ export function FamilyClient({ group, members: initialMembers, currentUserId, cu
     await navigator.clipboard.writeText(inviteUrl)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  function startEdit(m: FamilyMember) {
+    setEditingId(m.id)
+    setEditingName(m.display_name)
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setEditingName('')
+  }
+
+  async function saveName(memberId: string) {
+    const trimmed = editingName.trim()
+    if (!trimmed) return
+    setSavingId(memberId)
+    const { error } = await supabase
+      .from('family_members')
+      .update({ display_name: trimmed })
+      .eq('id', memberId)
+    if (!error) {
+      setMembers((prev) => prev.map((m) => m.id === memberId ? { ...m, display_name: trimmed } : m))
+      setEditingId(null)
+    }
+    setSavingId(null)
   }
 
   async function removeMember(memberId: string) {
@@ -127,18 +155,47 @@ export function FamilyClient({ group, members: initialMembers, currentUserId, cu
               >
                 <MemberAvatar name={m.display_name} color={m.color} size="md" />
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-gray-800">{m.display_name}</p>
-                    {m.role === 'admin' && <Crown className="h-3.5 w-3.5 text-amber-500" />}
-                    {m.user_id === currentUserId && <span className="text-xs text-gray-400">(você)</span>}
-                  </div>
+                  {editingId === m.id ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        autoFocus
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') saveName(m.id); if (e.key === 'Escape') cancelEdit() }}
+                        className="text-sm font-semibold text-gray-800 border border-[#7B2FBE] rounded-lg px-2 py-0.5 outline-none w-40"
+                      />
+                      <button
+                        onClick={() => saveName(m.id)}
+                        disabled={savingId === m.id}
+                        className="text-[#7B2FBE] hover:text-[#6020a0] p-1 rounded disabled:opacity-50"
+                      >
+                        <Check className="h-4 w-4" />
+                      </button>
+                      <button onClick={cancelEdit} className="text-gray-400 hover:text-gray-600 p-1 rounded">
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-gray-800">{m.display_name}</p>
+                      {m.role === 'admin' && <Crown className="h-3.5 w-3.5 text-amber-500" />}
+                      {m.user_id === currentUserId && <span className="text-xs text-gray-400">(você)</span>}
+                    </div>
+                  )}
                   <p className="text-xs text-gray-400">{m.role === 'admin' ? 'Administrador' : 'Membro'}</p>
                 </div>
-                {isAdmin && m.user_id !== currentUserId && (
-                  <button onClick={() => removeMember(m.id)} className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
+                <div className="flex items-center gap-1 shrink-0">
+                  {(isAdmin || m.user_id === currentUserId) && editingId !== m.id && (
+                    <button onClick={() => startEdit(m)} className="text-gray-400 hover:text-[#7B2FBE] p-1.5 rounded-lg hover:bg-purple-50">
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                  )}
+                  {isAdmin && m.user_id !== currentUserId && (
+                    <button onClick={() => removeMember(m.id)} className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

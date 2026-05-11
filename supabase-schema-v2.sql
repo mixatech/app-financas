@@ -195,6 +195,15 @@ create policy "Admins can view family invites"
   on family_invites for select
   using (is_family_admin(family_id));
 
+-- Permite qualquer autenticado ler convites válidos pelo token (necessário para aceite de convite)
+drop policy if exists "Anyone can view valid invites" on family_invites;
+create policy "Anyone can view valid invites"
+  on family_invites for select
+  using (
+    is_family_admin(family_id)
+    or (used_at is null and expires_at > now())
+  );
+
 drop policy if exists "Admins can create invites" on family_invites;
 create policy "Admins can create invites"
   on family_invites for insert
