@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -15,8 +15,24 @@ export default function ResetPasswordPage() {
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [sessionReady, setSessionReady] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = useRef(createClient()).current
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        setSessionReady(true)
+      }
+    })
+
+    // Fallback: sessão já existente (ex: usuário recarregou a página)
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) setSessionReady(true)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -70,6 +86,13 @@ export default function ResetPasswordPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-1">Nova senha</h1>
           <p className="text-gray-500 mb-8">Escolha uma senha com pelo menos 6 caracteres.</p>
 
+          {!sessionReady && !error && (
+            <div className="flex items-center gap-3 text-gray-400 text-sm py-4">
+              <div className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin shrink-0" />
+              Verificando link...
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
@@ -91,7 +114,7 @@ export default function ResetPasswordPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="h-11 border-gray-200 rounded-xl"
                 required
-                disabled={!!error}
+                disabled={!sessionReady || !!error}
               />
             </div>
             <div className="space-y-1.5">
@@ -104,10 +127,10 @@ export default function ResetPasswordPage() {
                 onChange={(e) => setConfirm(e.target.value)}
                 className="h-11 border-gray-200 rounded-xl"
                 required
-                disabled={!!error}
+                disabled={!sessionReady || !!error}
               />
             </div>
-            {!error && (
+            {sessionReady && !error && (
               <button
                 type="submit"
                 disabled={loading}

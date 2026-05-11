@@ -4,7 +4,6 @@ export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,25 +14,27 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
-  const supabase = createClient()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
+    const res = await fetch('/api/auth/send-recovery', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
     })
 
-    if (error) {
-      setError('Não foi possível enviar o e-mail. Verifique o endereço e tente novamente.')
-      setLoading(false)
+    setLoading(false)
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      setError(data.error ?? 'Não foi possível enviar o e-mail. Tente novamente.')
       return
     }
 
     setSuccess(true)
-    setLoading(false)
   }
 
   if (success) {
